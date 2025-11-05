@@ -14,7 +14,7 @@ return new class extends Migration
             Schema::create('barang_rusak', function (Blueprint $table) {
             $table->unsignedBigInteger('kode_barang');
             $table->integer('volume');
-            $table->string('status');
+            $table->string('status')->default('Rusak');
             $table->foreign('kode_barang')->references('kode_barang')->on('barang')->onDelete('cascade');
         });
     }

@@ -15,10 +15,10 @@ class barangrusakSeeder extends Seeder
     {
         $barang_rusak = [
             [
-                'kode_barang' => 77,
+                'kode_barang' => '77',
                 'volume' => 5,
-                'keterangan' => 'Rusak karena benturan'
-            ]
+                'status' => 'Rusak'
+            ],
         ];
 
         foreach ($barang_rusak as $item) {
