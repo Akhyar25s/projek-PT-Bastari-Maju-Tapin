@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
     $this->call([
         bulanSeeder::class,
         roleSeeder::class,
+        aktorSeeder::class,
     ]);
     }
 }
