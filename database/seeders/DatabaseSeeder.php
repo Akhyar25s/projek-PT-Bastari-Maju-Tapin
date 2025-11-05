@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         aktorSeeder::class,
         penggunaSeeder::class,
         barangSeeder::class,
+        barangrusakSeeder::class,
     ]);
     }
 }
