@@ -10,10 +10,40 @@ class DetailBarangController extends Controller
     public function index()
     {
         // Ambil semua barang untuk ditampilkan di halaman utama
-        $barang = DB::table('barang')
-            ->select('kode_barang', 'nama_barang', 'satuan', 'stok')
-            ->orderBy('nama_barang')
-            ->get();
+        // Jika request ?sort=popular maka urutkan berdasarkan total 'masuk' (paling sering ditambahkan)
+        $sort = request()->get('sort', 'popular');
+        $q = trim(request()->get('q', ''));
+
+        if ($sort === 'popular') {
+            // Left join ke detail_barang lalu hitung total masuk per barang
+            $query = DB::table('barang')
+                ->leftJoin('detail_barang', 'barang.kode_barang', '=', 'detail_barang.kode_barang')
+                ->select('barang.kode_barang', 'barang.nama_barang', 'barang.satuan', 'barang.stok', DB::raw('COALESCE(SUM(detail_barang.masuk),0) as total_masuk'))
+                ->groupBy('barang.kode_barang', 'barang.nama_barang', 'barang.satuan', 'barang.stok');
+
+            if ($q !== '') {
+                $query->where(function($wr) use ($q) {
+                    $wr->where('barang.nama_barang', 'like', "%{$q}%")
+                       ->orWhere('barang.kode_barang', 'like', "%{$q}%");
+                });
+            }
+
+            $barang = $query->orderByDesc('total_masuk')->get();
+        } else {
+            // Default: alfabet
+            $query = DB::table('barang')
+                ->select('kode_barang', 'nama_barang', 'satuan', 'stok')
+                ->orderBy('nama_barang');
+
+            if ($q !== '') {
+                $query->where(function($wr) use ($q) {
+                    $wr->where('nama_barang', 'like', "%{$q}%")
+                       ->orWhere('kode_barang', 'like', "%{$q}%");
+                });
+            }
+
+            $barang = $query->get();
+        }
 
         return view('barang.index', compact('barang'));
     }

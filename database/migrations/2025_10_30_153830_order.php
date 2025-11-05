@@ -9,10 +9,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('order', function (Blueprint $table) {
-            $table->id('id_order')->primary();
+            $table->id('id_order');
             $table->string('id_barang');
-            $table->string('satuan');
-            $table->integer('volume');
+            $table->integer('jumlah');
+            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->timestamps();
             $table->foreign('id_barang')->references('kode_barang')->on('barang')->onDelete('cascade');
     });
     }
