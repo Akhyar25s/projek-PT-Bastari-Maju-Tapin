@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
             Schema::create('barang_rusak', function (Blueprint $table) {
-            // kode_barang stored as string to match barang.kode_barang
             $table->string('kode_barang');
             $table->integer('volume');
             $table->string('status')->default('Rusak');

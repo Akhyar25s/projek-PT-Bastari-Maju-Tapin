@@ -19,6 +19,16 @@ class barangrusakSeeder extends Seeder
                 'volume' => 5,
                 'status' => 'Rusak'
             ],
+            [
+                'kode_barang' => '19',
+                'volume' => 2,
+                'status' => 'Rusak'
+            ],
+            [
+                'kode_barang' => '82',
+                'volume' => 3,
+                'status' => 'Rusak'
+            ],
         ];
 
         foreach ($barang_rusak as $item) {

@@ -22,6 +22,10 @@ class DatabaseSeeder extends Seeder
         penggunaSeeder::class,
         barangSeeder::class,
         barangrusakSeeder::class,
+        detailbarangSeeder::class,
+        rekapSRSeeder::class,
+        rekapGMSeeder::class,
+        orderSeeder::class,
     ]);
     }
 }
