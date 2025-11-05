@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
         bulanSeeder::class,
         roleSeeder::class,
         aktorSeeder::class,
+        penggunaSeeder::class,
     ]);
     }
 }
