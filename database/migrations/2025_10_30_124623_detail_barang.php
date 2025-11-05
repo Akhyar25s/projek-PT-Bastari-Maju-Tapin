@@ -13,7 +13,8 @@ return new class extends Migration
     {
             Schema::create('detail_barang', function (Blueprint $table) {
             $table->id('detail_barang')->primary();
-            $table->unsignedbiginteger('kode_barang');
+            // kode_barang is alphanumeric in some items; store as string
+            $table->string('kode_barang');
             $table->date('tanggal');
             $table->string('no_bukti');
             $table->integer('masuk');

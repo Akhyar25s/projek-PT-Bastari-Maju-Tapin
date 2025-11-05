@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('order', function (Blueprint $table) {
             $table->id('id_order')->primary();
-            $table->unsignedbiginteger('id_barang');
+            $table->string('id_barang');
             $table->string('satuan');
             $table->integer('volume');
             $table->foreign('id_barang')->references('kode_barang')->on('barang')->onDelete('cascade');
