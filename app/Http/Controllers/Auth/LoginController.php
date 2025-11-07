@@ -120,7 +120,7 @@ class LoginController extends Controller
             // Ambil informasi role dari tabel pengguna jika ada
             $pengguna = DB::table('pengguna')
                 ->where('id_aktor', $aktor->id_aktor)
-                ->first();
+                  ->first();
 
             $role = null;
             if ($pengguna) {

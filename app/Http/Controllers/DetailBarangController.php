@@ -89,6 +89,12 @@ class DetailBarangController extends Controller
 
     public function create($kode_barang)
     {
+        // Cek permission: hanya Admin yang bisa create transaksi
+        if (!function_exists('canCreate') || !canCreate()) {
+            return redirect()->route('barang.index')
+                ->with('error', 'Anda tidak memiliki akses untuk menambah transaksi');
+        }
+
         // Ambil info barang untuk form tambah transaksi
         $barang = DB::table('barang')
             ->where('kode_barang', $kode_barang)
@@ -121,6 +127,12 @@ class DetailBarangController extends Controller
 
     public function store(Request $request, $kode_barang)
     {
+        // Cek permission: hanya Admin yang bisa create transaksi
+        if (!function_exists('canCreate') || !canCreate()) {
+            return redirect()->route('barang.index')
+                ->with('error', 'Anda tidak memiliki akses untuk menambah transaksi');
+        }
+
         // Validasi input
         $validated = $request->validate([
             'tanggal' => 'required|date',

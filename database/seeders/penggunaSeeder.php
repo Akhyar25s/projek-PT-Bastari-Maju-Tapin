@@ -14,16 +14,16 @@ class penggunaSeeder extends Seeder
     public function run(): void
     {
         $pengguna = [
-            // Gudang1 sebagai role Gudang
+            // Gudang1 sebagai role Penjaga Gudang
             ['id_aktor' => '01', 'id_role' => '01'],
-            // Rencana sebagai role Rencana
+            // Rencana sebagai role Perencanaan
             ['id_aktor' => '02', 'id_role' => '02'],
             // Direktur sebagai role Direktur
             ['id_aktor' => '03', 'id_role' => '03'],
             // Keuangan sebagai role Keuangan
-            ['id_aktor' => '04', 'id_role' => '04'],
+            ['id_aktor' => '04', 'id_role' => '05'],
             // Admin sebagai role Admin
-            ['id_aktor' => '05', 'id_role' => '05'],
+            ['id_aktor' => '05', 'id_role' => '06'],
         ];
 
         foreach ($pengguna as $penggunaItem) {

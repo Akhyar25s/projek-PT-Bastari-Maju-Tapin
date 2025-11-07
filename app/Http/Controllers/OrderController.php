@@ -28,6 +28,12 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
+        // Cek permission: hanya Admin yang bisa order
+        if (!function_exists('canOrder') || !canOrder()) {
+            return redirect()->route('order.index')
+                ->with('error', 'Anda tidak memiliki akses untuk membuat order');
+        }
+
         $request->validate([
             'barang_id' => 'required|array',
             'quantity' => 'required|array',
@@ -138,6 +144,12 @@ class OrderController extends Controller
 
     public function confirmStore(Request $request)
     {
+        // Cek permission: hanya Admin yang bisa konfirmasi order
+        if (!function_exists('canOrder') || !canOrder()) {
+            return redirect()->route('order.index')
+                ->with('error', 'Anda tidak memiliki akses untuk mengonfirmasi order');
+        }
+
         $request->validate([
             'tanggal' => 'required|date',
             'no_bukti' => 'required|string|max:255',

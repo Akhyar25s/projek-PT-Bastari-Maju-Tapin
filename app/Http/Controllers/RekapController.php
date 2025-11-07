@@ -150,8 +150,13 @@ class RekapController extends Controller
      */
     public function index(Request $request)
     {
-        // Jika ada request untuk generate ulang rekap
+        // Jika ada request untuk generate ulang rekap (Hanya Admin)
         if ($request->has('generate')) {
+            if (!function_exists('canCreate') || !canCreate()) {
+                return redirect()->route('rekap.index')
+                    ->with('error', 'Anda tidak memiliki akses untuk generate rekap');
+            }
+            
             $idBulan = $request->input('bulan');
             $tahun = $request->input('tahun', date('Y'));
             

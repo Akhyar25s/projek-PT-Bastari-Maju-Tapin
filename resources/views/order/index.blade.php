@@ -35,7 +35,9 @@
             </div>
             <div class="flex space-x-2">
                 <a href="{{ route('order.status') }}" class="bg-gray-500 text-white px-4 py-2 rounded">Status Pesanan</a>
+                @if(function_exists('canOrder') && canOrder())
                 <button type="submit" form="orderForm" class="bg-blue-500 text-white px-4 py-2 rounded">Order</button>
+                @endif
             </div>
         </div>
     </div>
@@ -63,6 +65,7 @@
                         <td class="py-3 px-4">{{ $item->stok }}</td>
                         <td class="py-3 px-4">{{ $item->sisa }}</td>
                         <td class="py-3 px-4">
+                            @if(function_exists('canOrder') && canOrder())
                             <div class="flex items-center space-x-2">
                                 <input type="hidden" name="barang_id[]" value="{{ $item->kode_barang }}">
                                 <button type="button" class="decrease-qty bg-gray-200 px-3 py-1 rounded" onclick="decreaseQuantity(this)">-</button>
@@ -73,6 +76,9 @@
                                 <button type="button" class="increase-qty bg-gray-200 px-3 py-1 rounded" onclick="increaseQuantity(this)">+</button>
                                 <span class="text-xs text-gray-500" style="margin-left: 5px;">Max: {{ $item->stok }}</span>
                             </div>
+                            @else
+                            <span class="text-gray-400 text-sm">-</span>
+                            @endif
                         </td>
                     </tr>
                     @endforeach

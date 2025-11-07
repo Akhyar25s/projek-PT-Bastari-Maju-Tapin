@@ -15,7 +15,8 @@
         </div>
     @endif
 
-    <!-- Form Generate Rekap -->
+    <!-- Form Generate Rekap (Hanya Admin) -->
+    @if(function_exists('canCreate') && canCreate())
     <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px solid var(--blue);">
         <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #333;">
             Generate Rekap Otomatis dari Pengeluaran Barang
@@ -51,6 +52,7 @@
             </div>
         </form>
     </div>
+    @endif
 
     <!-- Rekap SR Section -->
     <div style="margin-bottom: 40px;">
@@ -74,7 +76,7 @@
                         <th style="padding: 8px 6px; background: var(--blue); color: #fff; text-align: center; font-size: 11px; font-weight: bold; border: 1px solid #ddd;">Salba</th>
                         <th style="padding: 8px 6px; background: var(--blue); color: #fff; text-align: center; font-size: 11px; font-weight: bold; border: 1px solid #ddd;">Piani</th>
                         <th style="padding: 8px 6px; background: var(--blue); color: #fff; text-align: center; font-size: 11px; font-weight: bold; border: 1px solid #ddd;">Jumlah</th>
-                        <th style="padding: 8px 6px; background: var(--blue); color: #fff; text-align: center; font-size: 11px; font-weight: bold; border: 1px solid #ddd;">Aksi</th>
+                        <th style="padding: 8px 6px; background: var(--blue); color: #fff; text-align: center; font-size: 11px; font-weight: bold; border: 1px solid #ddd;">Detail</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -134,7 +136,7 @@
                         <th style="padding: 8px 6px; background: var(--accent); color: #333; text-align: center; font-size: 11px; font-weight: bold; border: 1px solid #ddd;">Salba</th>
                         <th style="padding: 8px 6px; background: var(--accent); color: #333; text-align: center; font-size: 11px; font-weight: bold; border: 1px solid #ddd;">Piani</th>
                         <th style="padding: 8px 6px; background: var(--accent); color: #333; text-align: center; font-size: 11px; font-weight: bold; border: 1px solid #ddd;">Jumlah</th>
-                        <th style="padding: 8px 6px; background: var(--accent); color: #333; text-align: center; font-size: 11px; font-weight: bold; border: 1px solid #ddd;">Aksi</th>
+                        <th style="padding: 8px 6px; background: var(--accent); color: #333; text-align: center; font-size: 11px; font-weight: bold; border: 1px solid #ddd;">Detail</th>
                     </tr>
                 </thead>
                 <tbody>
