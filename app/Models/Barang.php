@@ -15,7 +15,8 @@ class Barang extends Model
         'kode_barang',
         'nama_barang',
         'satuan',
-        'stok'
+        'stok',
+        'sisa'
     ];
 
     public function orders()

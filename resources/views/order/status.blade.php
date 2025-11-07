@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('page_title', 'Status Pesanan')
+
 @section('content')
 <div class="content-wrapper">
     <div class="content-header">
@@ -15,14 +17,15 @@
                     <th class="py-3 px-4 text-left">Jumlah</th>
                     <th class="py-3 px-4 text-left">Status</th>
                     <th class="py-3 px-4 text-left">Tanggal</th>
+                    <th class="py-3 px-4 text-left">Aksi</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($orders as $order)
+                @forelse($orders as $order)
                 <tr class="border-b hover:bg-gray-50">
-                    <td class="py-3 px-4">{{ $order->id }}</td>
-                    <td class="py-3 px-4">{{ $order->barang->nama_barang }}</td>
-                    <td class="py-3 px-4">{{ $order->jumlah }} {{ $order->barang->satuan }}</td>
+                    <td class="py-3 px-4">{{ $order->id_order }}</td>
+                    <td class="py-3 px-4">{{ $order->nama_barang }}</td>
+                    <td class="py-3 px-4">{{ $order->jumlah }}</td>
                     <td class="py-3 px-4">
                         <span class="px-2 py-1 rounded text-sm
                             @if($order->status === 'pending') bg-yellow-100 text-yellow-800
@@ -32,9 +35,16 @@
                             {{ ucfirst($order->status) }}
                         </span>
                     </td>
-                    <td class="py-3 px-4">{{ $order->created_at->format('d/m/Y H:i') }}</td>
+                    <td class="py-3 px-4">{{ $order->created_at ? \Carbon\Carbon::parse($order->created_at)->format('d/m/Y H:i') : '-' }}</td>
+                    <td class="py-3 px-4">
+                        <a href="{{ route('orders.show', $order->id_order) }}" class="text-blue-500 hover:underline">Detail</a>
+                    </td>
                 </tr>
-                @endforeach
+                @empty
+                <tr>
+                    <td colspan="6" class="py-3 px-4 text-center text-gray-500">Tidak ada order</td>
+                </tr>
+                @endforelse
             </tbody>
         </table>
     </div>

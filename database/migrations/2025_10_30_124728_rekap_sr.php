@@ -23,7 +23,8 @@ return new class extends Migration
             $table->integer('batu hapu');
             $table->integer('bakarangan');
             $table->integer('lokpaikat');
-            $table->integer('sel');
+            $table->integer('salba');
+            $table->integer('piani');
             $table->integer('jumlah');
             $table->foreign('id_bulan')->references('id_bulan')->on('bulan');
         });

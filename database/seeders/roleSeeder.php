@@ -14,8 +14,9 @@ class roleSeeder extends Seeder
             ['id_role' => '01', 'nama_role' => 'Penjaga Gudang'],
             ['id_role' => '02', 'nama_role' => 'Perencanaan'],
             ['id_role' => '03', 'nama_role' => 'Direktur'],
-            ['id_role' => '04', 'nama_role' => 'Keuangan'],
-            ['id_role' => '05', 'nama_role' => 'Admin'],
+            ['id_role' => '04', 'nama_role' => 'Umum'],
+            ['id_role' => '05', 'nama_role' => 'Keuangan'],
+            ['id_role' => '06', 'nama_role' => 'Admin'],
         ];
 
         foreach ($role as $roleItem) {

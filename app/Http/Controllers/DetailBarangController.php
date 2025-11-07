@@ -157,6 +157,16 @@ class DetailBarangController extends Controller
             ->where('kode_barang', $kode_barang)
             ->update(['stok' => $sisa]);
 
+        // Auto-update rekap jika ada pengeluaran
+        if ($validated['keluar'] > 0) {
+            $tanggal = \Carbon\Carbon::parse($validated['tanggal']);
+            $idBulan = $tanggal->month;
+            $tahun = $tanggal->year;
+            
+            // Panggil method generate rekap dari RekapController
+            \App\Http\Controllers\RekapController::generateRekapStatic($idBulan, $tahun);
+        }
+
         return redirect()->route('barang.detail', $kode_barang)
             ->with('success', 'Detail transaksi berhasil ditambahkan');
     }
