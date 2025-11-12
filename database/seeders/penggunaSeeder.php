@@ -24,6 +24,8 @@ class penggunaSeeder extends Seeder
             ['id_aktor' => '04', 'id_role' => '05'],
             // Admin sebagai role Admin
             ['id_aktor' => '05', 'id_role' => '06'],
+            // Umum sebagai role Umum
+            ['id_aktor' => '06', 'id_role' => '04'],
         ];
 
         foreach ($pengguna as $penggunaItem) {

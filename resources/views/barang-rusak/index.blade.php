@@ -26,9 +26,7 @@
                                 <th style="background: var(--blue); color: #fff; padding: 12px; text-align: left; font-weight: 600;">Nama Barang</th>
                                 <th style="width:120px; background: var(--blue); color: #fff; padding: 12px; text-align: left; font-weight: 600;">Volume</th>
                                 <th style="background: var(--blue); color: #fff; padding: 12px; text-align: left; font-weight: 600;">Keterangan</th>
-                                @if(function_exists('canEdit') && canEdit())
                                 <th style="width:150px; background: var(--blue); color: #fff; padding: 12px; text-align: left; font-weight: 600;">Aksi</th>
-                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -38,7 +36,6 @@
                                 <td style="padding: 12px; color: #333;">{{ $item->nama_barang }}</td>
                                 <td style="padding: 12px; text-align: center; color: #333;">{{ $item->volume }}</td>
                                 <td style="padding: 12px; color: #333;">{{ $item->status ?? 'Rusak' }}</td>
-                                @if(function_exists('canEdit') && canEdit())
                                 <td style="padding: 12px; text-align: center;">
                                     <a href="{{ route('barang-rusak.edit', $item->kode_barang) }}" 
                                        class="action-btn" 
@@ -57,11 +54,10 @@
                                         </button>
                                     </form>
                                 </td>
-                                @endif
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="{{ function_exists('canEdit') && canEdit() ? '5' : '4' }}" style="text-align: center; padding: 40px; color: #999;">
+                                <td colspan="5" style="text-align: center; padding: 40px; color: #999;">
                                     Tidak ada data barang rusak
                                 </td>
                             </tr>
@@ -73,14 +69,12 @@
         </div>
     </div>
 
-    @if(function_exists('canCreate') && canCreate())
     <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
         <a href="{{ route('barang-rusak.create') }}" 
            style="background: #4b4b4b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: 500; display: inline-block;">
             Tambah
         </a>
     </div>
-    @endif
 
     <style>
         .table-wrapper table tbody tr:hover {

@@ -30,14 +30,32 @@
                         <span class="px-2 py-1 rounded text-sm
                             @if($order->status === 'pending') bg-yellow-100 text-yellow-800
                             @elseif($order->status === 'approved') bg-green-100 text-green-800
+                            @elseif($order->status === 'final_approved') bg-blue-100 text-blue-800
                             @elseif($order->status === 'rejected') bg-red-100 text-red-800
                             @endif">
-                            {{ ucfirst($order->status) }}
+                            {{ ucfirst(str_replace('_', ' ', $order->status ?? 'pending')) }}
                         </span>
                     </td>
                     <td class="py-3 px-4">{{ $order->created_at ? \Carbon\Carbon::parse($order->created_at)->format('d/m/Y H:i') : '-' }}</td>
                     <td class="py-3 px-4">
-                        <a href="{{ route('orders.show', $order->id_order) }}" class="text-blue-500 hover:underline">Detail</a>
+                        <div style="display: flex; gap: 10px;">
+                            <a href="{{ route('orders.show', $order->id_order) }}" class="text-blue-500 hover:underline">Detail</a>
+                            @php
+                                $userRole = strtolower(session('role') ?? '');
+                                $idAktor = session('id_aktor');
+                                $canViewInvoice = false;
+                                if (in_array($userRole, ['admin', 'penjaga gudang', 'pejaga gudang'])) {
+                                    $canViewInvoice = true;
+                                } elseif ($userRole === 'perencanaan' && $order->id_aktor == $idAktor) {
+                                    $canViewInvoice = true;
+                                }
+                            @endphp
+                            @if($canViewInvoice)
+                            <a href="{{ route('order.invoice', $order->id_order) }}" 
+                               target="_blank"
+                               class="text-green-500 hover:underline">📄 Invoice</a>
+                            @endif
+                        </div>
                     </td>
                 </tr>
                 @empty

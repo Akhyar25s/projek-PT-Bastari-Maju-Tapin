@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckRole
@@ -13,6 +14,7 @@ class CheckRole
      * Check apakah user memiliki role yang diizinkan
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  string  ...$roles  Role yang diizinkan (bisa lebih dari satu)
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
@@ -27,20 +29,43 @@ class CheckRole
 
         // Jika role tidak ada di session, coba ambil dari database
         if (!$userRole || !$userRoleId) {
-            $userRole = $this->getUserRoleFromDatabase(session('id_aktor'));
-            if ($userRole) {
-                session(['role' => $userRole->nama_role, 'id_role' => $userRole->id_role]);
-                $userRole = $userRole->nama_role;
-                $userRoleId = $userRole->id_role;
+            $roleData = $this->getUserRoleFromDatabase(session('id_aktor'));
+            if ($roleData) {
+                session([
+                    'role' => $roleData->nama_role,
+                    'id_role' => $roleData->id_role
+                ]);
+                $userRole = $roleData->nama_role;
+                $userRoleId = $roleData->id_role;
             }
         }
 
-        // Check apakah user memiliki salah satu role yang diizinkan
+        // Jika masih tidak ada role, redirect ke login
+        if (!$userRole) {
+            return redirect()->route('login')->with('error', 'Role tidak ditemukan. Silakan login ulang.');
+        }
+
+        // Normalize role names untuk comparison (case insensitive)
+        $userRoleNormalized = strtolower(trim($userRole));
         $allowedRoles = is_array($roles) ? $roles : [$roles];
+        $allowedRolesNormalized = array_map(function($role) {
+            return strtolower(trim($role));
+        }, $allowedRoles);
         
-        // Check by role name atau role id
-        if (!in_array($userRole, $allowedRoles) && !in_array($userRoleId, $allowedRoles)) {
-            // Jika tidak memiliki akses, redirect dengan error
+        // Check apakah user memiliki salah satu role yang diizinkan
+        $hasAccess = in_array($userRoleNormalized, $allowedRolesNormalized) || 
+                     in_array($userRoleId, $allowedRoles);
+
+        if (!$hasAccess) {
+            // Jika tidak memiliki akses, redirect ke dashboard sesuai role user
+            $redirectRoute = $this->getDashboardRouteByRole($userRole);
+            
+            if ($redirectRoute) {
+                return redirect()->route($redirectRoute)
+                    ->with('error', 'Anda tidak memiliki akses untuk mengakses halaman ini');
+            }
+            
+            // Fallback: redirect back atau ke dashboard index
             return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengakses halaman ini');
         }
 
@@ -48,14 +73,49 @@ class CheckRole
     }
 
     /**
-     * Ambil role dari database
+     * Ambil role dari database berdasarkan id_aktor
+     * 
+     * @param string $idAktor
+     * @return object|null
      */
     private function getUserRoleFromDatabase($idAktor)
     {
-        return \Illuminate\Support\Facades\DB::table('pengguna')
+        return DB::table('pengguna')
             ->join('role', 'pengguna.id_role', '=', 'role.id_role')
             ->select('role.nama_role', 'role.id_role')
             ->where('pengguna.id_aktor', $idAktor)
             ->first();
+    }
+
+    /**
+     * Mendapatkan route dashboard berdasarkan role user
+     * Helper method untuk redirect yang konsisten
+     * 
+     * @param string $role
+     * @return string|null
+     */
+    private function getDashboardRouteByRole($role)
+    {
+        if (!$role) {
+            return 'dashboard.index';
+        }
+
+        // Menggunakan if-elseif eksplisit untuk konsistensi dengan LoginController
+        // Urutan penting: Admin dulu, lalu yang lain
+        if ($role === 'Admin') {
+            return 'dashboard.admin';
+        } elseif ($role === 'Penjaga Gudang' || $role === 'Penjaga gudang') {
+            return 'dashboard.gudang';
+        } elseif ($role === 'Direktur') {
+            return 'dashboard.direktur';
+        } elseif ($role === 'Keuangan') {
+            return 'dashboard.keuangan';
+        } elseif ($role === 'Umum') {
+            return 'dashboard.umum';
+        } elseif ($role === 'Perencanaan') {
+            return 'dashboard.perencanaan';
+        }
+
+        return 'dashboard.index'; // Fallback
     }
 }

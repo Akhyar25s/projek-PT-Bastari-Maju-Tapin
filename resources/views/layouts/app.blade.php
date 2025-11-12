@@ -85,8 +85,30 @@
     <aside id="default-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar" style="top: var(--header-height); height: calc(100% - var(--header-height)); background-color: var(--blue);">
         <div class="h-full px-3 py-4 overflow-y-auto" style="background-color: var(--blue);">
             <ul class="space-y-2 font-medium sidebar-nav">
+                @php
+                    $userRole = strtolower(session('role') ?? '');
+                    $isAdmin = in_array($userRole, ['admin', 'penjaga gudang', 'pejaga gudang']);
+                    $canCreateOrder = in_array($userRole, ['perencanaan', 'penjaga gudang', 'pejaga gudang', 'admin']);
+                    $canValidateOrder = $userRole === 'umum';
+                    $canValidateFinal = $userRole === 'keuangan';
+                @endphp
+                
                 <li>
+                    @if($userRole === 'admin')
+                        <a href="{{ route('dashboard.admin') }}" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" style="background-color: #fff; color: #333;">
+                    @elseif($userRole === 'penjaga gudang' || $userRole === 'pejaga gudang')
+                        <a href="{{ route('dashboard.gudang') }}" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" style="background-color: #fff; color: #333;">
+                    @elseif($userRole === 'direktur')
+                        <a href="{{ route('dashboard.direktur') }}" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" style="background-color: #fff; color: #333;">
+                    @elseif($userRole === 'umum')
+                        <a href="{{ route('dashboard.umum') }}" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" style="background-color: #fff; color: #333;">
+                    @elseif($userRole === 'perencanaan')
+                        <a href="{{ route('dashboard.perencanaan') }}" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" style="background-color: #fff; color: #333;">
+                    @elseif($userRole === 'keuangan')
+                        <a href="{{ route('dashboard.keuangan') }}" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" style="background-color: #fff; color: #333;">
+                    @else
                     <a href="{{ route('dashboard.index') }}" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" style="background-color: #fff; color: #333;">
+                    @endif
                         <svg class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 21">
                             <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z"/>
                             <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z"/>
@@ -102,6 +124,7 @@
                         <span class="flex-1 ms-3 whitespace-nowrap">Daftar Barang</span>
                     </a>
                 </li>
+                @if($isAdmin)
                 <li>
                     <a href="{{ route('barang-rusak.index') }}" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" style="background-color: #fff; color: #333;">
                         <svg class="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
@@ -110,6 +133,8 @@
                         <span class="flex-1 ms-3 whitespace-nowrap">Barang Rusak</span>
                     </a>
                 </li>
+                @endif
+                @if($canCreateOrder)
                 <li>
                     <a href="{{ route('order.index') }}" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" style="background-color: #fff; color: #333;">
                         <svg class="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 18">
@@ -118,6 +143,17 @@
                         <span class="flex-1 ms-3 whitespace-nowrap">Order</span>
                     </a>
                 </li>
+                @endif
+                @if($canValidateOrder)
+                <li>
+                    <a href="{{ route('order.confirm') }}" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" style="background-color: #fff; color: #333;">
+                        <svg class="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 18">
+                            <path d="M14 2a3.963 3.963 0 0 0-1.4.267 6.439 6.439 0 0 1-1.331 6.638A4 4 0 1 0 14 2Zm1 9h-1.264A6.957 6.957 0 0 1 15 15v2a2.97 2.97 0 0 1-.184 1H19a1 1 0 0 0 1-1v-1a5.006 5.006 0 0 0-5-5ZM6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Z"/>
+                        </svg>
+                        <span class="flex-1 ms-3 whitespace-nowrap">Validasi Order</span>
+                    </a>
+                </li>
+                @endif
                 <li>
                     <a href="{{ route('rekap.index') }}" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" style="background-color: #fff; color: #333;">
                         <svg class="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 20">

@@ -12,7 +12,12 @@ class Order extends Model
     protected $fillable = [
         'id_barang',
         'jumlah',
-        'status'
+        'status',
+        'tipe_rekap',
+        'id_aktor',
+        'no_bukti',
+        'alamat',
+        'keterangan'
     ];
 
     public function barang()

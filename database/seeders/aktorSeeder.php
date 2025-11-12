@@ -16,6 +16,7 @@ class aktorSeeder extends Seeder
             ['id_aktor' => '03', 'nama_aktor' => 'Direktur', 'password' => 'direktur123'],
             ['id_aktor' => '04', 'nama_aktor' => 'Keuangan', 'password' => 'keuangan123'],
             ['id_aktor' => '05', 'nama_aktor' => 'Admin', 'password' => 'admin123'],
+            ['id_aktor' => '06', 'nama_aktor' => 'Umum', 'password' => 'umum123'],
         ];
 
         foreach ($aktor as $aktorItem) {

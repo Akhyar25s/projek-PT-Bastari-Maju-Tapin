@@ -26,12 +26,6 @@ class BarangRusakController extends Controller
      */
     public function create()
     {
-        // Cek permission: hanya Admin yang bisa create
-        if (!function_exists('canCreate') || !canCreate()) {
-            return redirect()->route('barang-rusak.index')
-                ->with('error', 'Anda tidak memiliki akses untuk menambah data');
-        }
-
         $barang = DB::table('barang')
             ->orderBy('nama_barang')
             ->get();
@@ -44,12 +38,6 @@ class BarangRusakController extends Controller
      */
     public function store(Request $request)
     {
-        // Cek permission: hanya Admin yang bisa create
-        if (!function_exists('canCreate') || !canCreate()) {
-            return redirect()->route('barang-rusak.index')
-                ->with('error', 'Anda tidak memiliki akses untuk menambah data');
-        }
-
         $request->validate([
             'kode_barang' => 'required|exists:barang,kode_barang',
             'volume' => 'required|integer|min:1',
@@ -94,12 +82,6 @@ class BarangRusakController extends Controller
      */
     public function edit($kode_barang)
     {
-        // Cek permission: hanya Admin yang bisa edit
-        if (!function_exists('canEdit') || !canEdit()) {
-            return redirect()->route('barang-rusak.index')
-                ->with('error', 'Anda tidak memiliki akses untuk mengedit data');
-        }
-
         $barangRusak = DB::table('barang_rusak')
             ->join('barang', 'barang_rusak.kode_barang', '=', 'barang.kode_barang')
             ->select('barang_rusak.*', 'barang.nama_barang', 'barang.satuan')
@@ -123,12 +105,6 @@ class BarangRusakController extends Controller
      */
     public function update(Request $request, $kode_barang)
     {
-        // Cek permission: hanya Admin yang bisa update
-        if (!function_exists('canEdit') || !canEdit()) {
-            return redirect()->route('barang-rusak.index')
-                ->with('error', 'Anda tidak memiliki akses untuk mengedit data');
-        }
-
         $request->validate([
             'kode_barang' => 'required|exists:barang,kode_barang',
             'volume' => 'required|integer|min:1',
@@ -169,12 +145,6 @@ class BarangRusakController extends Controller
      */
     public function destroy($kode_barang)
     {
-        // Cek permission: hanya Admin yang bisa delete
-        if (!function_exists('canDelete') || !canDelete()) {
-            return redirect()->route('barang-rusak.index')
-                ->with('error', 'Anda tidak memiliki akses untuk menghapus data');
-        }
-
         $existing = DB::table('barang_rusak')
             ->where('kode_barang', $kode_barang)
             ->first();

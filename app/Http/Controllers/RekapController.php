@@ -95,6 +95,57 @@ class RekapController extends Controller
     }
 
     /**
+     * Update atau generate rekap untuk bulan tertentu berdasarkan tipe (sr atau gm)
+     * Method ini bisa dipanggil dari controller lain
+     */
+    public static function generateRekapByTipe($idBulan, $tipe, $tahun = null)
+    {
+        $controller = new self();
+        return $controller->generateRekapByTipeInternal($idBulan, $tipe, $tahun);
+    }
+
+    /**
+     * Update atau generate rekap untuk bulan tertentu berdasarkan tipe (sr atau gm)
+     */
+    private function generateRekapByTipeInternal($idBulan, $tipe, $tahun = null)
+    {
+        if (!$tahun) {
+            $tahun = date('Y');
+        }
+
+        if (!in_array($tipe, ['sr', 'gm'])) {
+            return false;
+        }
+
+        $rekapData = $this->hitungRekap($idBulan, $tahun);
+        
+        if (!$rekapData) {
+            return false;
+        }
+
+        $tableName = $tipe === 'sr' ? 'rekap_sr' : 'rekap_gm';
+        $primaryKey = $tipe === 'sr' ? 'sr' : 'gm';
+
+        // Update atau insert rekap berdasarkan tipe
+        $rekap = DB::table($tableName)
+            ->where('id_bulan', $idBulan)
+            ->first();
+
+        if ($rekap) {
+            // Update existing
+            DB::table($tableName)
+                ->where('id_bulan', $idBulan)
+                ->update($rekapData);
+        } else {
+            // Insert new
+            $rekapData['id_bulan'] = $idBulan;
+            DB::table($tableName)->insert($rekapData);
+        }
+
+        return true;
+    }
+
+    /**
      * Update atau generate rekap untuk bulan tertentu
      */
     public function generateRekap($idBulan, $tahun = null)
@@ -150,13 +201,8 @@ class RekapController extends Controller
      */
     public function index(Request $request)
     {
-        // Jika ada request untuk generate ulang rekap (Hanya Admin)
+        // Jika ada request untuk generate ulang rekap
         if ($request->has('generate')) {
-            if (!function_exists('canCreate') || !canCreate()) {
-                return redirect()->route('rekap.index')
-                    ->with('error', 'Anda tidak memiliki akses untuk generate rekap');
-            }
-            
             $idBulan = $request->input('bulan');
             $tahun = $request->input('tahun', date('Y'));
             
