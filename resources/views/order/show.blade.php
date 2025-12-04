@@ -23,6 +23,15 @@
             <dt class="font-bold">Jumlah:</dt>
             <dd>{{ $order->jumlah }}</dd>
             
+            @php $userRole = strtolower(session('role') ?? ''); @endphp
+            @if($userRole === 'keuangan')
+            <dt class="font-bold">Harga /unit:</dt>
+            <dd>Rp {{ isset($order->harga_satuan) ? number_format($order->harga_satuan,2,',','.') : '0,00' }}</dd>
+            
+            <dt class="font-bold">Total Harga:</dt>
+            <dd class="font-bold text-blue-600">Rp {{ isset($order->total_harga) ? number_format($order->total_harga,2,',','.') : '0,00' }}</dd>
+            @endif
+            
             <dt class="font-bold">Status:</dt>
             <dd>
                 <span class="px-2 py-1 rounded text-sm

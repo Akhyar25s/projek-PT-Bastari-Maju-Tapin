@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
          Schema::create('aktor', function (Blueprint $table) {
-            $table->id('id_aktor')->primary();
+            // id() sudah primary otomatis
+            $table->id('id_aktor');
             $table->string('nama_aktor');
             $table->string('password');
         });

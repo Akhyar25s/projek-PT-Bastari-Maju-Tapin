@@ -11,11 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('order', function (Blueprint $table) {
-            // Tambahkan kolom id_aktor untuk melacak siapa yang membuat order
-            $table->string('id_aktor')->nullable()->after('id_order');
-            $table->foreign('id_aktor')->references('id_aktor')->on('aktor')->onDelete('cascade');
-        });
+        // Guard: hanya tambahkan kolom jika belum ada (mencegah duplicate column error)
+        if (!Schema::hasColumn('order', 'id_aktor')) {
+            Schema::table('order', function (Blueprint $table) {
+                // Tambahkan kolom id_aktor untuk melacak siapa yang membuat order
+                $table->string('id_aktor')->nullable()->after('id_order');
+            });
+
+            // Tambahkan foreign key jika tabel 'aktor' tersedia
+            if (Schema::hasTable('aktor')) {
+                Schema::table('order', function (Blueprint $table) {
+                    $table->foreign('id_aktor')->references('id_aktor')->on('aktor')->onDelete('cascade');
+                });
+            }
+        }
     }
 
     /**
@@ -23,10 +32,18 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('order', function (Blueprint $table) {
-            $table->dropForeign(['id_aktor']);
-            $table->dropColumn('id_aktor');
-        });
+        // Hanya drop jika kolom ada
+        if (Schema::hasColumn('order', 'id_aktor')) {
+            Schema::table('order', function (Blueprint $table) {
+                // Drop foreign key jika ada
+                try {
+                    $table->dropForeign(['id_aktor']);
+                } catch (\Exception $e) {
+                    // ignore if foreign doesn't exist
+                }
+                $table->dropColumn('id_aktor');
+            });
+        }
     }
 };
 

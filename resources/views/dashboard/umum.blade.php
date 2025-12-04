@@ -33,56 +33,63 @@
             Order yang Perlu Divalidasi
         </h3>
         
-        @if($orderPending->count() > 0)
+        @if(isset($orderPendingBpp) && $orderPendingBpp->count() > 0)
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="background: var(--accent); color: #333;">
-                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">No Order</th>
-                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Nama Barang</th>
-                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Jumlah</th>
+                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Batch ID</th>
+                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Jumlah Item</th>
                         <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Pemesan</th>
                         <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Tanggal</th>
                         <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($orderPending as $order)
+                    @foreach($orderPendingBpp as $bpp)
                     <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 12px; border: 1px solid #eee;">{{ $order->id_order }}</td>
-                        <td style="padding: 12px; border: 1px solid #eee;">{{ $order->nama_barang }}</td>
-                        <td style="padding: 12px; text-align: center; border: 1px solid #eee;">{{ $order->jumlah }} {{ $order->satuan }}</td>
+                        <td style="padding: 12px; border: 1px solid #eee;">
+                            <code style="background: #f4f4f4; padding: 4px 8px; border-radius: 4px;">{{ $bpp->no_bukti }}</code>
+                        </td>
                         <td style="padding: 12px; text-align: center; border: 1px solid #eee;">
-                            <span style="padding: 4px 8px; background: #e7f3ff; color: #0066cc; border-radius: 8px; font-size: 11px;">
-                                {{ $order->role_pemesan }}
+                            <span style="padding: 4px 12px; background: #007bff; color: white; border-radius: 12px; font-weight: bold;">
+                                {{ $bpp->item_count }} Item
                             </span>
                         </td>
                         <td style="padding: 12px; text-align: center; border: 1px solid #eee;">
-                            {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y H:i') }}
+                            <span style="padding: 4px 8px; background: #e7f3ff; color: #0066cc; border-radius: 8px; font-size: 11px;">
+                                {{ $bpp->role_pemesan }}
+                            </span>
+                            <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                                {{ $bpp->nama_aktor ?? '-' }}
+                            </div>
+                        </td>
+                        <td style="padding: 12px; text-align: center; border: 1px solid #eee;">
+                            {{ \Carbon\Carbon::parse($bpp->created_at)->format('d/m/Y H:i') }}
                         </td>
                         <td style="padding: 12px; text-align: center; border: 1px solid #eee;">
                             <div style="display: flex; gap: 8px; justify-content: center;">
-                                <form action="{{ route('order.validate-umum', $order->id_order) }}" method="POST" style="display: inline;">
+                                <form action="{{ route('order.validate-bpp-umum', $bpp->no_bukti) }}" method="POST" style="display: inline;">
                                     @csrf
                                     <input type="hidden" name="action" value="approve">
                                     <button type="submit" 
-                                            onclick="return confirm('Apakah Anda yakin ingin menyetujui order ini?')"
+                                            onclick="return confirm('Apakah Anda yakin ingin menyetujui surat BPP ini ({{ $bpp->item_count }} item)?')"
                                             style="padding: 6px 12px; background: #28a745; color: white; border: none; border-radius: 4px; font-size: 13px; cursor: pointer;">
                                         Approve
                                     </button>
                                 </form>
-                                <form action="{{ route('order.validate-umum', $order->id_order) }}" method="POST" style="display: inline;">
+                                <form action="{{ route('order.validate-bpp-umum', $bpp->no_bukti) }}" method="POST" style="display: inline;">
                                     @csrf
                                     <input type="hidden" name="action" value="reject">
                                     <button type="submit" 
-                                            onclick="return confirm('Apakah Anda yakin ingin menolak order ini?')"
+                                            onclick="return confirm('Apakah Anda yakin ingin menolak surat BPP ini ({{ $bpp->item_count }} item)?')"
                                             style="padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; font-size: 13px; cursor: pointer;">
                                         Reject
                                     </button>
                                 </form>
-                                <a href="{{ route('orders.show', $order->id_order) }}" 
+                                <a href="{{ route('order.bpp-detail', $bpp->no_bukti) }}" 
                                    style="padding: 6px 12px; background: var(--btn); color: white; text-decoration: none; border-radius: 4px; font-size: 13px; display: inline-block;">
-                                    Detail
+                                    Detail Batch
                                 </a>
                             </div>
                         </td>

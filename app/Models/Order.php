@@ -17,11 +17,19 @@ class Order extends Model
         'id_aktor',
         'no_bukti',
         'alamat',
-        'keterangan'
+        'keterangan',
+        'harga_satuan',
+        'total_harga',
+        'batch_id'
     ];
 
     public function barang()
     {
         return $this->belongsTo(Barang::class, 'id_barang', 'kode_barang');
+    }
+
+    public function aktor()
+    {
+        return $this->belongsTo(Aktor::class, 'id_aktor', 'id_aktor');
     }
 }

@@ -12,20 +12,21 @@ return new class extends Migration
     public function up(): void
     {
             Schema::create('rekap_gm', function (Blueprint $table) {
-            $table->id('gm')->primary();
+            // id() sudah primary otomatis
+            $table->id('gm');
             $table->unsignedbiginteger('id_bulan');
-            $table->integer('rantau');
-            $table->integer('binuang');
-            $table->integer('tap sel');
-            $table->integer('clu');
-            $table->integer('cls');
-            $table->integer('tap tengah');
-            $table->integer('batu hapu');
-            $table->integer('bakarangan');
-            $table->integer('lokpaikat');
-            $table->integer('salba');
-            $table->integer('piani');
-            $table->integer('jumlah');
+            $table->integer('rantau')->default(0);
+            $table->integer('binuang')->default(0);
+            $table->integer('tap_sel')->default(0);
+            $table->integer('clu')->default(0);
+            $table->integer('cls')->default(0);
+            $table->integer('tap_tengah')->default(0);
+            $table->integer('batu_hapu')->default(0);
+            $table->integer('bakarangan')->default(0);
+            $table->integer('lokpaikat')->default(0);
+            $table->integer('salba')->default(0);
+            $table->integer('piani')->default(0);
+            $table->integer('jumlah')->default(0);
             $table->foreign('id_bulan')->references('id_bulan')->on('bulan');
         });
     }

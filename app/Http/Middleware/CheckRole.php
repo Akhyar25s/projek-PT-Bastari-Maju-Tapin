@@ -100,19 +100,20 @@ class CheckRole
             return 'dashboard.index';
         }
 
-        // Menggunakan if-elseif eksplisit untuk konsistensi dengan LoginController
-        // Urutan penting: Admin dulu, lalu yang lain
-        if ($role === 'Admin') {
+        // Normalisasi role ke lowercase untuk perbandingan case-insensitive
+        $r = strtolower(trim($role));
+
+        if ($r === 'admin') {
             return 'dashboard.admin';
-        } elseif ($role === 'Penjaga Gudang' || $role === 'Penjaga gudang') {
+        } elseif ($r === 'penjaga gudang' || $r === 'penjaga_gudang' || $r === 'pejaga gudang' || $r === 'pejaga_gudang') {
             return 'dashboard.gudang';
-        } elseif ($role === 'Direktur') {
+        } elseif ($r === 'direktur') {
             return 'dashboard.direktur';
-        } elseif ($role === 'Keuangan') {
+        } elseif ($r === 'keuangan') {
             return 'dashboard.keuangan';
-        } elseif ($role === 'Umum') {
+        } elseif ($r === 'umum') {
             return 'dashboard.umum';
-        } elseif ($role === 'Perencanaan') {
+        } elseif ($r === 'perencanaan') {
             return 'dashboard.perencanaan';
         }
 

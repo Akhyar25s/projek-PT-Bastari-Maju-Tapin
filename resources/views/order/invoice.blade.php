@@ -89,6 +89,11 @@
                         <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Nama Barang</th>
                         <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Jumlah</th>
                         <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Satuan</th>
+                        @php $userRole = strtolower(session('role') ?? ''); @endphp
+                        @if($userRole === 'keuangan')
+                            <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Harga /unit</th>
+                            <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Subtotal</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -96,9 +101,19 @@
                         <td style="padding: 12px; border: 1px solid #eee; color: #333;">{{ $order->nama_barang }}</td>
                         <td style="padding: 12px; text-align: center; border: 1px solid #eee; color: #333; font-weight: 600;">{{ $order->jumlah }}</td>
                         <td style="padding: 12px; text-align: center; border: 1px solid #eee; color: #333;">{{ $order->satuan }}</td>
+                        @if($userRole === 'keuangan')
+                            <td style="padding: 12px; text-align: center; border: 1px solid #eee; color: #333;">{{ isset($order->harga_satuan) ? number_format($order->harga_satuan,2,',','.') : '-' }}</td>
+                            <td style="padding: 12px; text-align: center; border: 1px solid #eee; color: #333; font-weight: 700;">{{ isset($order->total_harga) ? number_format($order->total_harga,2,',','.') : '-' }}</td>
+                        @endif
                     </tr>
                 </tbody>
             </table>
+            @php $userRole = strtolower(session('role') ?? ''); @endphp
+            @if($userRole === 'keuangan')
+                <div style="text-align: right; margin-top: 18px; font-size: 15px; font-weight: 600; color: #333;">
+                    Total: <span style="color: var(--blue);">Rp {{ isset($order->total_harga) ? number_format($order->total_harga,2,',','.') : number_format(($order->harga_satuan ?? 0) * ($order->jumlah ?? 0),2,',','.') }}</span>
+                </div>
+            @endif
         </div>
 
         <!-- Footer -->

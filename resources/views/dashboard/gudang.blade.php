@@ -23,61 +23,46 @@
         </div>
     </div>
 
-    <!-- Order dari Perencanaan yang Perlu Divalidasi -->
-    @if(isset($orderFromPerencanaan) && $orderFromPerencanaan->count() > 0)
-    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid var(--yellow);">
-        <strong>Info:</strong> Ada {{ $orderFromPerencanaanCount }} order dari Perencanaan yang perlu divalidasi.
+    <!-- Surat BPP dari Perencanaan yang Perlu Divalidasi -->
+    @if(isset($bppPendingPerencanaan) && $bppPendingPerencanaan->count() > 0)
+    <div style="background:#fff3cd; padding:15px; border-radius:8px; margin-bottom:20px; border:2px solid var(--yellow);">
+        <strong>Info:</strong> Ada {{ $bppPendingPerencanaanCount }} surat BPP dari Perencanaan yang perlu divalidasi.
     </div>
-
-    <div style="background: white; padding: 25px; border-radius: 8px; margin-bottom: 30px; border: 2px solid var(--accent);">
-        <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 20px; color: #333; padding-bottom: 10px; border-bottom: 2px solid var(--accent);">
-            Order dari Perencanaan yang Perlu Divalidasi
+    <div style="background:white; padding:25px; border-radius:8px; margin-bottom:30px; border:2px solid var(--accent);">
+        <h3 style="font-size:20px; font-weight:bold; margin-bottom:20px; color:#333; padding-bottom:10px; border-bottom:2px solid var(--accent);">
+            Surat BPP dari Perencanaan (Pending)
         </h3>
-        
-        <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse;">
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse;">
                 <thead>
-                    <tr style="background: var(--accent); color: #333;">
-                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">No Order</th>
-                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Nama Barang</th>
-                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Jumlah</th>
-                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Tanggal</th>
-                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Aksi</th>
+                    <tr style="background:var(--accent); color:#333;">
+                        <th style="padding:12px; border:1px solid #ddd; text-align:left;">No BPP</th>
+                        <th style="padding:12px; border:1px solid #ddd; text-align:center;">Jumlah Item</th>
+                        <th style="padding:12px; border:1px solid #ddd; text-align:center;">Tanggal</th>
+                        <th style="padding:12px; border:1px solid #ddd; text-align:center;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($orderFromPerencanaan as $order)
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 12px; border: 1px solid #eee;">{{ $order->id_order }}</td>
-                        <td style="padding: 12px; border: 1px solid #eee;">{{ $order->nama_barang }}</td>
-                        <td style="padding: 12px; text-align: center; border: 1px solid #eee;">{{ $order->jumlah }} {{ $order->satuan }}</td>
-                        <td style="padding: 12px; text-align: center; border: 1px solid #eee;">
-                            {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y H:i') }}
+                    @foreach($bppPendingPerencanaan as $bpp)
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:12px; border:1px solid #eee;"><code style="background:#f4f4f4; padding:4px 8px; border-radius:4px;">{{ $bpp->no_bukti }}</code></td>
+                        <td style="padding:12px; border:1px solid #eee; text-align:center;">
+                            <span style="background:#007bff; color:#fff; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:bold;">{{ $bpp->item_count }} Item</span>
                         </td>
-                        <td style="padding: 12px; text-align: center; border: 1px solid #eee;">
-                            <div style="display: flex; gap: 8px; justify-content: center;">
-                                <form action="{{ route('order.validate-gudang', $order->id_order) }}" method="POST" style="display: inline;">
+                        <td style="padding:12px; border:1px solid #eee; text-align:center;">{{ \Carbon\Carbon::parse($bpp->created_at)->format('d/m/Y H:i') }}</td>
+                        <td style="padding:12px; border:1px solid #eee; text-align:center;">
+                            <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
+                                <a href="{{ route('order.bpp-detail', $bpp->no_bukti) }}" style="padding:6px 12px; background:var(--btn); color:#fff; text-decoration:none; border-radius:4px; font-size:12px;">Detail</a>
+                                <form action="{{ route('order.validate-bpp-gudang', $bpp->no_bukti) }}" method="POST" style="display:inline;">
                                     @csrf
                                     <input type="hidden" name="action" value="approve">
-                                    <button type="submit" 
-                                            onclick="return confirm('Apakah Anda yakin ingin menyetujui order ini?')"
-                                            style="padding: 6px 12px; background: #28a745; color: white; border: none; border-radius: 4px; font-size: 13px; cursor: pointer;">
-                                        Approve
-                                    </button>
+                                    <button type="submit" onclick="return confirm('Approve semua item dalam BPP ini?')" style="padding:6px 12px; background:#28a745; color:#fff; border:none; border-radius:4px; font-size:12px; cursor:pointer;">Approve</button>
                                 </form>
-                                <form action="{{ route('order.validate-gudang', $order->id_order) }}" method="POST" style="display: inline;">
+                                <form action="{{ route('order.validate-bpp-gudang', $bpp->no_bukti) }}" method="POST" style="display:inline;">
                                     @csrf
                                     <input type="hidden" name="action" value="reject">
-                                    <button type="submit" 
-                                            onclick="return confirm('Apakah Anda yakin ingin menolak order ini?')"
-                                            style="padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; font-size: 13px; cursor: pointer;">
-                                        Reject
-                                    </button>
+                                    <button type="submit" onclick="return confirm('Reject semua item dalam BPP ini?')" style="padding:6px 12px; background:#dc3545; color:#fff; border:none; border-radius:4px; font-size:12px; cursor:pointer;">Reject</button>
                                 </form>
-                                <a href="{{ route('orders.show', $order->id_order) }}" 
-                                   style="padding: 6px 12px; background: var(--btn); color: white; text-decoration: none; border-radius: 4px; font-size: 13px; display: inline-block;">
-                                    Detail
-                                </a>
                             </div>
                         </td>
                     </tr>
@@ -114,53 +99,40 @@
             </div>
         </div>
 
-        <!-- Tabel Status Pesanan -->
-        <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse;">
+        <!-- Tabel Status BPP -->
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse;">
                 <thead>
-                    <tr style="background: var(--accent); color: #333;">
-                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">No Order</th>
-                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Nama Barang</th>
-                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Jumlah</th>
-                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Status</th>
-                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Tanggal</th>
-                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Aksi</th>
+                    <tr style="background:var(--accent); color:#333;">
+                        <th style="padding:12px; border:1px solid #ddd; text-align:left;">No BPP</th>
+                        <th style="padding:12px; border:1px solid #ddd; text-align:center;">Item</th>
+                        <th style="padding:12px; border:1px solid #ddd; text-align:center;">Status</th>
+                        <th style="padding:12px; border:1px solid #ddd; text-align:center;">Tanggal</th>
+                        <th style="padding:12px; border:1px solid #ddd; text-align:center;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($statusPesanan as $order)
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 12px; border: 1px solid #eee;">{{ $order->id_order }}</td>
-                        <td style="padding: 12px; border: 1px solid #eee;">{{ $order->nama_barang }}</td>
-                        <td style="padding: 12px; text-align: center; border: 1px solid #eee;">{{ $order->jumlah }} {{ $order->satuan }}</td>
-                        <td style="padding: 12px; text-align: center; border: 1px solid #eee;">
-                            @if($order->status === 'pending')
-                                <span style="padding: 4px 12px; background: #FFF3CD; color: #856404; border-radius: 12px; font-size: 12px; font-weight: 600;">Pending</span>
-                            @elseif($order->status === 'approved')
-                                <span style="padding: 4px 12px; background: #D4EDDA; color: #155724; border-radius: 12px; font-size: 12px; font-weight: 600;">Approved</span>
-                            @elseif($order->status === 'final_approved')
-                                <span style="padding: 4px 12px; background: #D1ECF1; color: #0c5460; border-radius: 12px; font-size: 12px; font-weight: 600;">Final Approved</span>
-                            @elseif($order->status === 'rejected')
-                                <span style="padding: 4px 12px; background: #F8D7DA; color: #721c24; border-radius: 12px; font-size: 12px; font-weight: 600;">Rejected</span>
-                            @else
-                                <span style="padding: 4px 12px; background: #E2E3E5; color: #383d41; border-radius: 12px; font-size: 12px; font-weight: 600;">{{ ucfirst(str_replace('_', ' ', $order->status ?? 'unknown')) }}</span>
-                            @endif
+                    @forelse($statusPesananBpp as $bpp)
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:12px; border:1px solid #eee;"><code style="background:#f4f4f4; padding:4px 8px; border-radius:4px;">{{ $bpp->no_bukti }}</code></td>
+                        <td style="padding:12px; border:1px solid #eee; text-align:center;">{{ $bpp->item_total }} Item</td>
+                        <td style="padding:12px; border:1px solid #eee; text-align:center;">
+                            @php $s=$bpp->agg_status; @endphp
+                            <span style="padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;
+                                @if($s==='pending') background:#FFF3CD; color:#856404;
+                                @elseif($s==='approved') background:#D4EDDA; color:#155724;
+                                @elseif($s==='final_approved') background:#D1ECF1; color:#0c5460;
+                                @elseif($s==='rejected') background:#F8D7DA; color:#721c24;
+                                @else background:#E2E3E5; color:#383d41; @endif">{{ ucfirst(str_replace('_',' ',$s)) }}</span>
                         </td>
-                        <td style="padding: 12px; text-align: center; border: 1px solid #eee;">
-                            {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y H:i') }}
-                        </td>
-                        <td style="padding: 12px; text-align: center; border: 1px solid #eee;">
-                            <a href="{{ route('orders.show', $order->id_order) }}" 
-                               style="padding: 6px 12px; background: var(--btn); color: white; text-decoration: none; border-radius: 4px; font-size: 13px; display: inline-block;">
-                                Detail
-                            </a>
+                        <td style="padding:12px; border:1px solid #eee; text-align:center;">-</td>
+                        <td style="padding:12px; border:1px solid #eee; text-align:center;">
+                            <a href="{{ route('order.bpp-detail', ['no_bukti' => urlencode($bpp->no_bukti)]) }}" style="padding:6px 12px; background:var(--btn); color:#fff; text-decoration:none; border-radius:4px; font-size:12px;">Detail</a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" style="padding: 40px; text-align: center; color: #999; border: 1px solid #eee;">
-                            Tidak ada pesanan
-                        </td>
+                        <td colspan="5" style="padding:40px; text-align:center; color:#999; border:1px solid #eee;">Tidak ada surat BPP</td>
                     </tr>
                     @endforelse
                 </tbody>

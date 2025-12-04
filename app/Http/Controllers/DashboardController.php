@@ -89,24 +89,58 @@ class DashboardController extends Controller
      */
     public function gudang()
     {
-        // Pejaga gudang memiliki akses penuh, gunakan data yang sama dengan index
+        // Data dasar
         $data = $this->getDashboardData();
-        
-        // Tambahkan order dari Perencanaan yang perlu divalidasi
-        $orderFromPerencanaan = DB::table('order')
-            ->join('barang', 'order.id_barang', '=', 'barang.kode_barang')
+
+        // Group per BPP (no_bukti) yang pending dari Perencanaan untuk divalidasi oleh Gudang
+        $bppPendingPerencanaan = DB::table('order')
             ->join('pengguna', 'order.id_aktor', '=', 'pengguna.id_aktor')
             ->join('role', 'pengguna.id_role', '=', 'role.id_role')
             ->where('order.status', 'pending')
-            ->whereNotNull('order.id_aktor')
+            ->whereNotNull('order.no_bukti')
             ->where('role.nama_role', 'Perencanaan')
-            ->select('order.*', 'barang.nama_barang', 'barang.satuan', 'role.nama_role as role_pemesan')
-            ->orderBy('order.created_at', 'desc')
+            ->select(
+                'order.no_bukti',
+                DB::raw('MIN(order.created_at) as created_at'),
+                DB::raw('COUNT(*) as item_count')
+            )
+            ->groupBy('order.no_bukti')
+            ->orderBy('created_at', 'desc')
             ->get();
-        
-        $data['orderFromPerencanaan'] = $orderFromPerencanaan;
-        $data['orderFromPerencanaanCount'] = $orderFromPerencanaan->count();
-        
+
+        $data['bppPendingPerencanaan'] = $bppPendingPerencanaan;
+        $data['bppPendingPerencanaanCount'] = $bppPendingPerencanaan->count();
+
+        // Status per BPP agregat (distinct no_bukti) untuk statistik
+        $bppAgg = DB::table('order')
+            ->whereNotNull('no_bukti')
+            ->select(
+                'no_bukti',
+                DB::raw("SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END) as pending_count"),
+                DB::raw("SUM(CASE WHEN status='approved' THEN 1 ELSE 0 END) as approved_count"),
+                DB::raw("SUM(CASE WHEN status='final_approved' THEN 1 ELSE 0 END) as final_count"),
+                DB::raw("SUM(CASE WHEN status='rejected' THEN 1 ELSE 0 END) as rejected_count"),
+                DB::raw('COUNT(*) as item_total')
+            )
+            ->groupBy('no_bukti')
+            ->get()
+            ->map(function($r){
+                $itemCount = $r->item_total;
+                if ($r->final_count == $itemCount && $itemCount > 0) $r->agg_status = 'final_approved';
+                elseif ($r->rejected_count > 0) $r->agg_status = 'rejected';
+                elseif ($r->pending_count > 0) $r->agg_status = 'pending';
+                else $r->agg_status = 'approved';
+                return $r;
+            });
+
+        $data['orderPendingCount'] = $bppAgg->where('agg_status','pending')->count();
+        $data['orderApprovedCount'] = $bppAgg->where('agg_status','approved')->count();
+        $data['orderFinalApprovedCount'] = $bppAgg->where('agg_status','final_approved')->count();
+        $data['orderRejectedCount'] = $bppAgg->where('agg_status','rejected')->count();
+
+        // Ambil daftar BPP terbaru (limit 10) untuk tabel status (tanpa harga)
+        $data['statusPesananBpp'] = $bppAgg->sortByDesc('agg_status')->take(10); // bisa diganti urutan waktu jika perlu
+
         return view('dashboard.gudang', $data);
     }
     
@@ -322,32 +356,38 @@ class DashboardController extends Controller
     public function umum()
     {
         // Umum hanya bisa melihat dan memvalidasi order dari Penjaga Gudang (bukan Perencanaan)
-        $poPending = DB::table('order')
+        // Group by batch_id untuk menampilkan batch order
+        // Grouping berdasarkan no_bukti (surat BPP) bukan batch_id
+        $orderPendingBpp = DB::table('order')
             ->join('pengguna', 'order.id_aktor', '=', 'pengguna.id_aktor')
+            ->join('aktor', 'order.id_aktor', '=', 'aktor.id_aktor')
             ->join('role', 'pengguna.id_role', '=', 'role.id_role')
             ->where('order.status', 'pending')
+            ->whereNotNull('order.id_aktor')
             ->whereIn('role.nama_role', ['Penjaga Gudang', 'penjaga gudang', 'pejaga gudang'])
-            ->count();
-
-        // Order yang perlu divalidasi (pending) - Hanya dari Gudang
-        $orderPending = DB::table('order')
-            ->join('barang', 'order.id_barang', '=', 'barang.kode_barang')
-            ->join('pengguna', 'order.id_aktor', '=', 'pengguna.id_aktor')
-            ->join('role', 'pengguna.id_role', '=', 'role.id_role')
-            ->where('order.status', 'pending')
-            ->whereNotNull('order.id_aktor') // Pastikan order memiliki id_aktor
-            ->whereIn('role.nama_role', ['Penjaga Gudang', 'penjaga gudang', 'pejaga gudang']) // Hanya order dari Gudang
-            ->select('order.*', 'barang.nama_barang', 'barang.satuan', 'role.nama_role as role_pemesan')
-            ->orderBy('order.created_at', 'desc')
+            ->whereNotNull('order.no_bukti')
+            ->select(
+                'order.no_bukti',
+                DB::raw('MIN(order.created_at) as created_at'),
+                DB::raw('COUNT(*) as item_count'),
+                'aktor.nama_aktor as nama_aktor',
+                'role.nama_role as role_pemesan'
+            )
+            ->groupBy('order.no_bukti', 'aktor.nama_aktor', 'role.nama_role')
+            ->orderBy('created_at', 'desc')
             ->get();
 
-        // Statistik Order - Hanya dari Gudang
+        // Hitung total pending surat BPP
+        $poPending = $orderPendingBpp->count();
+
+        // Statistik Order - Hanya dari Gudang (per batch)
         $orderStats = DB::table('order')
             ->join('pengguna', 'order.id_aktor', '=', 'pengguna.id_aktor')
             ->join('role', 'pengguna.id_role', '=', 'role.id_role')
-            ->whereNotNull('order.id_aktor') // Pastikan order memiliki id_aktor
-            ->whereIn('role.nama_role', ['Penjaga Gudang', 'penjaga gudang', 'pejaga gudang']) // Hanya order dari Gudang
-            ->select('order.status', DB::raw('count(*) as total'))
+            ->whereNotNull('order.id_aktor')
+            ->whereNotNull('order.no_bukti')
+            ->whereIn('role.nama_role', ['Penjaga Gudang', 'penjaga gudang', 'pejaga gudang'])
+            ->select('order.status', DB::raw('COUNT(DISTINCT order.no_bukti) as total'))
             ->groupBy('order.status')
             ->get()
             ->pluck('total', 'status')
@@ -359,7 +399,7 @@ class DashboardController extends Controller
 
         return view('dashboard.umum', compact(
             'poPending',
-            'orderPending',
+            'orderPendingBpp',
             'orderPendingCount',
             'orderApprovedCount',
             'orderRejectedCount'
@@ -371,31 +411,39 @@ class DashboardController extends Controller
      */
     public function perencanaan()
     {
-        // Perencanaan hanya bisa mengorder barang
-        $myOrders = DB::table('order')
-            ->join('barang', 'order.id_barang', '=', 'barang.kode_barang')
-            ->where('order.id_aktor', session('id_aktor'))
-            ->whereNotNull('order.id_aktor') // Pastikan order memiliki id_aktor
-            ->select('order.*', 'barang.nama_barang', 'barang.satuan')
-            ->orderBy('order.created_at', 'desc')
-            ->get();
-
-        // Statistik order saya - Include final_approved
-        $myOrderStats = DB::table('order')
+        // Group order saya per surat BPP
+        $myBpp = DB::table('order')
             ->where('id_aktor', session('id_aktor'))
-            ->select('status', DB::raw('count(*) as total'))
-            ->groupBy('status')
+            ->whereNotNull('no_bukti')
+            ->select(
+                'no_bukti',
+                DB::raw('MIN(created_at) as created_at'),
+                DB::raw('COUNT(*) as item_count'),
+                DB::raw("SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END) as pending_count"),
+                DB::raw("SUM(CASE WHEN status='approved' THEN 1 ELSE 0 END) as approved_count"),
+                DB::raw("SUM(CASE WHEN status='final_approved' THEN 1 ELSE 0 END) as final_count"),
+                DB::raw("SUM(CASE WHEN status='rejected' THEN 1 ELSE 0 END) as rejected_count")
+            )
+            ->groupBy('no_bukti')
+            ->orderBy('created_at', 'desc')
             ->get()
-            ->pluck('total', 'status')
-            ->toArray();
+            ->map(function($r){
+                $totalItems = $r->item_count;
+                if ($r->final_count == $totalItems && $totalItems > 0) $r->agg_status = 'final_approved';
+                elseif ($r->rejected_count > 0) $r->agg_status = 'rejected';
+                elseif ($r->pending_count > 0) $r->agg_status = 'pending';
+                else $r->agg_status = 'approved';
+                return $r;
+            });
 
-        $myOrderPending = $myOrderStats['pending'] ?? 0;
-        $myOrderApproved = $myOrderStats['approved'] ?? 0;
-        $myOrderFinalApproved = $myOrderStats['final_approved'] ?? 0;
-        $myOrderRejected = $myOrderStats['rejected'] ?? 0;
+        // Statistik per BPP (distinct BPP per status)
+        $myOrderPending = $myBpp->where('agg_status','pending')->count();
+        $myOrderApproved = $myBpp->where('agg_status','approved')->count();
+        $myOrderFinalApproved = $myBpp->where('agg_status','final_approved')->count();
+        $myOrderRejected = $myBpp->where('agg_status','rejected')->count();
 
         return view('dashboard.perencanaan', compact(
-            'myOrders',
+            'myBpp',
             'myOrderPending',
             'myOrderApproved',
             'myOrderFinalApproved',
@@ -408,42 +456,66 @@ class DashboardController extends Controller
      */
     public function keuangan()
     {
-        // Keuangan bisa melihat dan memvalidasi laporan orderan dari umum (birokrasi akhir)
-        // Order yang sudah di-approve oleh umum dan perlu validasi akhir dari keuangan
-        $orderApprovedByUmum = DB::table('order')
-            ->join('barang', 'order.id_barang', '=', 'barang.kode_barang')
-            ->join('pengguna', 'order.id_aktor', '=', 'pengguna.id_aktor')
-            ->join('role', 'pengguna.id_role', '=', 'role.id_role')
-            ->where('order.status', 'approved')
-            ->whereNotNull('order.id_aktor') // Pastikan order memiliki id_aktor
-            ->whereIn('role.nama_role', ['Penjaga Gudang', 'Perencanaan'])
-            ->select('order.*', 'barang.nama_barang', 'barang.satuan', 'role.nama_role as role_pemesan')
-            ->orderBy('order.created_at', 'desc')
+        // Kelompokkan per surat BPP (no_bukti) untuk tampilan keuangan
+        $bppRows = DB::table('order')
+            ->whereNotNull('no_bukti')
+            ->select(
+                DB::raw('TRIM(no_bukti) as no_bukti'),
+                DB::raw('MIN(created_at) as created_at'),
+                DB::raw('COUNT(*) as item_count'),
+                DB::raw("SUM(CASE WHEN LOWER(TRIM(status))='pending' THEN 1 ELSE 0 END) as pending_count"),
+                DB::raw("SUM(CASE WHEN LOWER(TRIM(status))='approved' THEN 1 ELSE 0 END) as approved_count"),
+                DB::raw("SUM(CASE WHEN LOWER(TRIM(status))='final_approved' THEN 1 ELSE 0 END) as final_count"),
+                DB::raw("SUM(CASE WHEN LOWER(TRIM(status))='rejected' THEN 1 ELSE 0 END) as rejected_count"),
+                DB::raw('SUM(COALESCE(total_harga,0)) as grand_total'),
+                DB::raw("SUM(CASE WHEN LOWER(TRIM(status)) NOT IN ('pending','approved','final_approved','rejected') THEN 1 ELSE 0 END) as unknown_count")
+            )
+            ->groupBy(DB::raw('TRIM(no_bukti)'))
+            ->orderBy('created_at', 'desc')
             ->get();
 
-        // Statistik Order
-        $orderStats = DB::table('order')
-            ->join('pengguna', 'order.id_aktor', '=', 'pengguna.id_aktor')
-            ->join('role', 'pengguna.id_role', '=', 'role.id_role')
-            ->whereNotNull('order.id_aktor') // Pastikan order memiliki id_aktor
-            ->whereIn('role.nama_role', ['Penjaga Gudang', 'Perencanaan'])
-            ->select('order.status', DB::raw('count(*) as total'))
-            ->groupBy('order.status')
-            ->get()
-            ->pluck('total', 'status')
-            ->toArray();
+        // Hitung status agregat & siapkan list BPP yang perlu final approve
+        $bppRows = $bppRows->map(function($r){
+            $itemCount = $r->item_count ?? 0;
+            $status = 'approved';
+            if (($r->final_count ?? 0) === $itemCount && $itemCount > 0) {
+                $status = 'final_approved';
+            } elseif (($r->rejected_count ?? 0) > 0) {
+                $status = 'rejected';
+            } elseif (($r->pending_count ?? 0) > 0) {
+                $status = 'pending';
+            } elseif (($r->approved_count ?? 0) > 0) {
+                $status = 'approved';
+            } elseif (($r->unknown_count ?? 0) > 0) {
+                $status = 'unknown';
+            }
+            $r->agg_status = $status;
+            return $r;
+        });
 
-        $orderPendingCount = $orderStats['pending'] ?? 0;
-        $orderApprovedCount = $orderStats['approved'] ?? 0;
-        $orderRejectedCount = $orderStats['rejected'] ?? 0;
-        $orderFinalApprovedCount = $orderStats['final_approved'] ?? 0;
+        // BPP yang siap divalidasi final:
+        // - Harus ada minimal 1 item approved/pending (belum semua final/reject)
+        // - Exclude BPP yang sudah semua item final_approved atau semua rejected
+        $bppForFinal = $bppRows->filter(function($r){
+            $hasApprovedOrPending = ($r->approved_count ?? 0) > 0 || ($r->pending_count ?? 0) > 0;
+            $notAllFinalized = ($r->final_count ?? 0) < ($r->item_count ?? 0);
+            return $hasApprovedOrPending && $notAllFinalized;
+        });
+
+        // Statistik agregat per BPP (distinct surat BPP per status)
+        $orderPendingCount = $bppRows->where('agg_status','pending')->count();
+        $orderApprovedCount = $bppRows->where('agg_status','approved')->count();
+        $orderRejectedCount = $bppRows->where('agg_status','rejected')->count();
+        $orderFinalApprovedCount = $bppRows->where('agg_status','final_approved')->count();
+        $orderUnknownCount = $bppRows->where('agg_status','unknown')->count();
 
         return view('dashboard.keuangan', compact(
-            'orderApprovedByUmum',
+            'bppForFinal',
             'orderPendingCount',
             'orderApprovedCount',
             'orderRejectedCount',
-            'orderFinalApprovedCount'
+            'orderFinalApprovedCount',
+            'orderUnknownCount'
         ));
     }
 }

@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('bulan', function (Blueprint $table) {
-            $table->id('id_bulan')->primary();
+            // id() sudah otomatis menjadi primary key, tidak perlu ->primary() lagi
+            $table->id('id_bulan');
             $table->string('nama_bulan');
         });
     }

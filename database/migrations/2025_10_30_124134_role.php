@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-      Schema::create('role', function (Blueprint $table) {
-            $table->id('id_role')->primary();
-            $table->string('nama_role');
-        });
+    Schema::create('role', function (Blueprint $table) {
+        // id() sudah primary otomatis
+        $table->id('id_role');
+        $table->string('nama_role');
+      });
     }
 
     /**

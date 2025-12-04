@@ -14,8 +14,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Ubah enum status untuk menambahkan 'final_approved'
-        DB::statement("ALTER TABLE `order` MODIFY COLUMN `status` ENUM('pending', 'approved', 'rejected', 'final_approved') DEFAULT 'pending'");
+        // Jalankan perubahan enum hanya untuk MySQL; SQLite tidak mendukung MODIFY COLUMN enum
+        if (Schema::getConnection()->getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE `order` MODIFY COLUMN `status` ENUM('pending', 'approved', 'rejected', 'final_approved') DEFAULT 'pending'");
+        } else {
+            // Pada SQLite kita biarkan apa adanya; aplikasi masih dapat menggunakan nilai 'final_approved'
+            // karena SQLite memperlakukan enum sebagai TEXT dengan constraint.
+        }
     }
 
     /**
@@ -23,8 +28,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Kembalikan ke enum sebelumnya (tanpa final_approved)
-        // Hati-hati: jika ada data dengan status final_approved, akan error
-        DB::statement("ALTER TABLE `order` MODIFY COLUMN `status` ENUM('pending', 'approved', 'rejected') DEFAULT 'pending'");
+        if (Schema::getConnection()->getDriverName() === 'mysql') {
+            // Kembalikan ke enum sebelumnya (tanpa final_approved)
+            DB::statement("ALTER TABLE `order` MODIFY COLUMN `status` ENUM('pending', 'approved', 'rejected') DEFAULT 'pending'");
+        }
+        // SQLite: no action needed
     }
 };

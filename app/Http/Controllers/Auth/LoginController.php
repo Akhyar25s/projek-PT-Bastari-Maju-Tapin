@@ -104,17 +104,9 @@ class LoginController extends Controller
             return null;
         }
 
-        // Cek password - support both hashed dan plain text (untuk backward compatibility)
-        $passwordMatch = false;
-        
-        // Cek apakah password sudah di-hash (Laravel hash biasanya dimulai dengan $2y$)
-        if (str_starts_with($aktor->password, '$2y$') || str_starts_with($aktor->password, '$2a$') || str_starts_with($aktor->password, '$2x$')) {
-            // Password sudah di-hash, gunakan Hash::check
-            $passwordMatch = Hash::check($password, $aktor->password);
-        } else {
-            // Password masih plain text, bandingkan langsung
-            $passwordMatch = ($password === $aktor->password);
-        }
+        // Cek password hanya menggunakan Hash::check.
+        // Fallback perbandingan plaintext telah dihapus untuk keamanan; pastikan semua password sudah di-hash.
+        $passwordMatch = Hash::check($password, $aktor->password);
 
         if ($passwordMatch) {
             // Ambil informasi role dari tabel pengguna jika ada

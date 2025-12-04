@@ -24,6 +24,9 @@
                         <th style="width:90px">Kode</th>
                         <th>Nama Barang</th>
                         <th style="width:120px">Satuan</th>
+                        @if(session('role') === 'keuangan')
+                        <th style="width:120px">Harga (Rp)</th>
+                        @endif
                         <th style="width:90px">Stok</th>
                         <th style="width:90px">Sisa</th>
                         <th style="width:120px">Aksi</th>
@@ -41,9 +44,15 @@
                         <td>{{ $item->nama_barang }}</td>
                         <td>{{ $item->satuan }}</td>
                         <td>{{ $item->stok }}</td>
+                        @if(session('role') === 'keuangan')
+                        <td>{{ $item->harga !== null ? number_format($item->harga,2,',','.') : '-' }}</td>
+                        @endif
                         <td>{{ $sisa }}</td>
                         <td>
                             <a href="{{ route('barang.detail', $item->kode_barang) }}" class="btn-cta">Detail</a>
+                            @if(session('role') === 'keuangan')
+                                <a href="{{ route('barang.harga.edit', $item->kode_barang) }}" class="btn-cta" style="background:#5cb85c">Edit Harga</a>
+                            @endif
                         </td>
                     </tr>
                     @endforeach
@@ -52,6 +61,9 @@
                         <td colspan="3">Jumlah</td>
                         <td>{{ $totalStok }}</td>
                         <td>{{ $totalSisa }}</td>
+                        @if(session('role') === 'keuangan')
+                        <td></td>
+                        @endif
                         <td></td>
                     </tr>
                 </tbody>

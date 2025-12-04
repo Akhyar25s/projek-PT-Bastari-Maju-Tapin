@@ -85,6 +85,10 @@
                         <th class="py-3 px-4 text-left">Satuan</th>
                         <th class="py-3 px-4 text-left">Stok</th>
                         <th class="py-3 px-4 text-left">Sisa</th>
+                        @php $userRole = strtolower(session('role') ?? ''); @endphp
+                        @if($userRole === 'keuangan')
+                            <th class="py-3 px-4 text-left">Harga</th>
+                        @endif
                         <th class="py-3 px-4 text-left">Aksi</th>
                     </tr>
                 </thead>
@@ -96,6 +100,9 @@
                         <td class="py-3 px-4">{{ $item->satuan }}</td>
                         <td class="py-3 px-4">{{ $item->stok }}</td>
                         <td class="py-3 px-4">{{ $item->sisa }}</td>
+                        @if($userRole === 'keuangan')
+                            <td class="py-3 px-4">{{ isset($item->harga) ? number_format($item->harga,2,',','.') : '-' }}</td>
+                        @endif
                         <td class="py-3 px-4">
                             <div class="flex items-center space-x-2">
                                 <input type="hidden" name="barang_id[]" value="{{ $item->kode_barang }}">
@@ -136,21 +143,21 @@ function saveQuantities() {
             existingQuantities = JSON.parse(saved);
         }
     } catch (e) {
-        console.error('Error reading existing quantities:', e);
+        // ignore parse error
     }
     
     // Ambil quantity dari input yang terlihat di halaman saat ini
     const currentQuantities = {};
     const inputs = document.querySelectorAll('.quantity-input');
-    
+
     inputs.forEach(function(input) {
         const kode = input.getAttribute('data-kode');
-        const value = parseInt(input.value) || 0;
+        const value = parseInt(input.value, 10) || 0;
         if (value > 0) {
             currentQuantities[kode] = value;
         } else {
-            // Jika value = 0, hapus dari existing (jika ada)
-            delete existingQuantities[kode];
+            // Jika value = 0, jangan hapus dari existing secara agresif di sini;
+            // biarkan merge nanti yang memutuskan apakah key harus ada atau tidak.
         }
     });
     
@@ -159,8 +166,6 @@ function saveQuantities() {
     
     // Simpan ke localStorage
     localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedQuantities));
-    
-    console.log('Quantity disimpan:', mergedQuantities);
 }
 
 // Fungsi untuk restore quantity dari localStorage
@@ -175,19 +180,20 @@ function restoreQuantities() {
                 const input = document.getElementById('qty-' + kode);
                 if (input) {
                     const savedValue = quantities[kode];
-                    const maxValue = parseInt(input.getAttribute('max')) || 0;
-                    // Pastikan value tidak melebihi max
-                    const finalValue = Math.min(savedValue, maxValue);
+                    const maxAttr = input.getAttribute('max');
+                    const hasMax = maxAttr !== null && maxAttr !== '';
+                    const maxValue = hasMax ? parseInt(maxAttr, 10) || 0 : null;
+                    // Pastikan value tidak melebihi max (jika max tersedia)
+                    const finalValue = (maxValue !== null) ? Math.min(savedValue, maxValue) : savedValue;
                     input.value = finalValue;
                     restoredCount++;
-                    console.log('Quantity di-restore untuk kode', kode, ':', finalValue);
                 }
             });
             
-            console.log('Total quantity yang di-restore:', restoredCount, 'dari', Object.keys(quantities).length, 'barang di localStorage');
+            // total restored logged only in debug mode
         }
     } catch (e) {
-        console.error('Error restoring quantities:', e);
+        // ignore restore errors in production
     }
 }
 
@@ -196,8 +202,8 @@ function saveTipeRekap() {
     const tipeRekapElement = document.getElementById('tipe_rekap');
     if (tipeRekapElement) {
         const tipeRekap = tipeRekapElement.value;
-    if (tipeRekap) {
-        localStorage.setItem(STORAGE_TIPE_KEY, tipeRekap);
+        if (tipeRekap) {
+            localStorage.setItem(STORAGE_TIPE_KEY, tipeRekap);
         }
     }
 }
@@ -213,7 +219,7 @@ function restoreTipeRekap() {
             }
         }
     } catch (e) {
-        console.error('Error restoring tipe rekap:', e);
+        // ignore restore errors
     }
 }
 
@@ -247,8 +253,9 @@ function increaseQuantity(button) {
             input.value = currentValue + 1;
             saveQuantities();
         } else if (max !== null) {
-        alert('Stok tidak cukup. Stok tersedia: ' + max);
+            alert('Stok tidak cukup. Stok tersedia: ' + max);
         } else {
+            // Jika tidak ada batas max, tetap izinkan increment
             input.value = currentValue + 1;
             saveQuantities();
         }
@@ -307,7 +314,6 @@ function setupEventListeners() {
                 // Simpan semua quantity yang terlihat sebelum search
                 saveQuantities();
                 saveTipeRekap();
-                console.log('Quantity disimpan sebelum search');
             });
         }
     }
@@ -362,52 +368,42 @@ function addHiddenOrderInputs() {
             const visibleInputs = document.querySelectorAll('.quantity-input');
             visibleInputs.forEach(function(input) {
                 const kode = input.getAttribute('data-kode');
-                visibleKodes.add(kode); // Tambahkan semua kode yang terlihat, tidak peduli quantity-nya
+                visibleKodes.add(kode);
             });
             
-            console.log('Kode barang yang terlihat di halaman:', Array.from(visibleKodes));
-            console.log('Kode barang di localStorage:', Object.keys(quantities));
-            
-            // Untuk setiap barang di localStorage
+            // Untuk setiap barang di localStorage, tambahkan hidden input jika tidak terlihat
             Object.keys(quantities).forEach(function(kode) {
                 const localStorageQty = quantities[kode];
-                const isVisible = visibleKodes.has(kode); // Cek apakah barang terlihat di halaman
+                const isVisible = visibleKodes.has(kode);
                 
-                // Jika barang TIDAK terlihat di halaman TAPI ada quantity di localStorage
                 if (localStorageQty > 0 && !isVisible) {
-                    console.log('Menambahkan hidden input untuk barang yang tidak terlihat:', kode, 'Quantity:', localStorageQty);
-                    
-                    // Tambahkan hidden input untuk barang_id
                     const hiddenBarangId = document.createElement('input');
                     hiddenBarangId.type = 'hidden';
                     hiddenBarangId.name = 'barang_id[]';
                     hiddenBarangId.value = kode;
                     hiddenBarangId.className = 'hidden-order-input';
                     
-                    // Tambahkan hidden input untuk quantity
                     const hiddenQuantity = document.createElement('input');
                     hiddenQuantity.type = 'hidden';
                     hiddenQuantity.name = 'quantity[]';
                     hiddenQuantity.value = localStorageQty;
                     hiddenQuantity.className = 'hidden-order-input';
                     
-                    // Append ke form (pastikan urutan: barang_id dulu, lalu quantity)
                     form.appendChild(hiddenBarangId);
                     form.appendChild(hiddenQuantity);
                 }
             });
-            
-            // Log jumlah hidden input yang ditambahkan
-            const addedHidden = document.querySelectorAll('.hidden-order-input');
-            console.log('Total hidden input yang ditambahkan:', addedHidden.length / 2, 'barang');
         }
     } catch (e) {
-        console.error('Error adding hidden inputs:', e);
+        // ignore errors while adding hidden inputs
     }
 }
 
 // Validasi sebelum submit order
-document.getElementById('orderForm').addEventListener('submit', function(e) {
+// Register submit listener only if form exists
+const orderFormElement = document.getElementById('orderForm');
+if (orderFormElement) {
+    orderFormElement.addEventListener('submit', function(e) {
     // Simpan quantity terlebih dahulu
     saveQuantities();
     
@@ -418,20 +414,6 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     const allQuantityInputs = document.querySelectorAll('input[name="quantity[]"]');
     const allBarangInputs = document.querySelectorAll('input[name="barang_id[]"]');
     
-    // Debug: log jumlah input dan urutan
-    console.log('Total barang_id:', allBarangInputs.length);
-    console.log('Total quantity:', allQuantityInputs.length);
-    
-    // Log urutan array untuk debugging
-    console.log('=== URUTAN ARRAY YANG AKAN DIKIRIM ===');
-    for (let i = 0; i < Math.min(allBarangInputs.length, 10); i++) { // Log 10 pertama saja
-        console.log(`Index ${i}: barang_id=${allBarangInputs[i].value}, quantity=${allQuantityInputs[i].value}`);
-    }
-    if (allBarangInputs.length > 10) {
-        console.log(`... dan ${allBarangInputs.length - 10} item lainnya`);
-    }
-    console.log('=======================================');
-    
     let hasError = false;
     let errorMessage = '';
     let hasQuantity = false;
@@ -439,17 +421,12 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
 
     // Buat mapping untuk validasi - pastikan jumlah barang_id dan quantity sama
     if (allBarangInputs.length !== allQuantityInputs.length) {
-        console.error('Jumlah barang_id dan quantity tidak sama!', {
-            barang_id: allBarangInputs.length,
-            quantity: allQuantityInputs.length
-        });
         e.preventDefault();
         alert('Terjadi kesalahan: Jumlah barang_id dan quantity tidak sesuai. Silakan refresh halaman dan coba lagi.');
         return false;
     }
     
     // Validasi dan hitung total quantity
-    console.log('=== DAFTAR BARANG YANG AKAN DIORDER ===');
     for (let i = 0; i < allBarangInputs.length; i++) {
         const kode = allBarangInputs[i].value;
         const value = parseInt(allQuantityInputs[i].value) || 0;
@@ -457,11 +434,8 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
         if (value > 0) {
             hasQuantity = true;
             quantitiesMap[kode] = value;
-            console.log(`${i + 1}. Kode: ${kode}, Quantity: ${value}`);
         }
     }
-    console.log('Total barang yang akan diorder:', Object.keys(quantitiesMap).length);
-    console.log('========================================');
 
     // Validasi untuk input yang terlihat (hanya untuk Perencanaan, bukan Gudang)
     const visibleInputs = document.querySelectorAll('.quantity-input');
@@ -495,7 +469,8 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     
     // Jangan clear storage di sini, biarkan clear setelah order benar-benar berhasil
     // Storage akan di-clear jika ada success message
-});
+    });
+}
 </script>
 @endpush
 @endsection

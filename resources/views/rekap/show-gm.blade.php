@@ -38,11 +38,11 @@
                         <td class="sticky-column-detail"><strong>Nilai</strong></td>
                         <td>{{ $item->rantau ?? 0 }}</td>
                         <td>{{ $item->binuang ?? 0 }}</td>
-                        <td>{{ $item->{'tap sel'} ?? 0 }}</td>
+                        <td>{{ $item->tap_sel ?? 0 }}</td>
                         <td>{{ $item->clu ?? 0 }}</td>
                         <td>{{ $item->cls ?? 0 }}</td>
-                        <td>{{ $item->{'tap tengah'} ?? 0 }}</td>
-                        <td>{{ $item->{'batu hapu'} ?? 0 }}</td>
+                        <td>{{ $item->tap_tengah ?? 0 }}</td>
+                        <td>{{ $item->batu_hapu ?? 0 }}</td>
                         <td>{{ $item->bakarangan ?? 0 }}</td>
                         <td>{{ $item->lokpaikat ?? 0 }}</td>
                         <td>{{ $item->salba ?? 0 }}</td>

@@ -47,63 +47,44 @@
     </div>
     @endif
 
-    <!-- Daftar Order Saya -->
+    <!-- Daftar Surat BPP Saya -->
     <div style="background: white; padding: 25px; border-radius: 8px; margin-bottom: 30px; border: 2px solid var(--accent);">
         <h3 style="font-size: 20px; font-weight: bold; margin-bottom: 20px; color: #333; padding-bottom: 10px; border-bottom: 2px solid var(--accent);">
-            Daftar Order Saya
+            Daftar Surat BPP Saya
         </h3>
-        
-        @if($myOrders->count() > 0)
+        @if($myBpp->count() > 0)
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="background: var(--accent); color: #333;">
-                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">No Order</th>
-                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Nama Barang</th>
-                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Jumlah</th>
+                        <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">No BPP</th>
+                        <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Jumlah Item</th>
                         <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Status</th>
                         <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Tanggal</th>
                         <th style="padding: 12px; text-align: center; border: 1px solid #ddd;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($myOrders as $order)
+                    @foreach($myBpp as $bpp)
                     <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 12px; border: 1px solid #eee;">{{ $order->id_order }}</td>
-                        <td style="padding: 12px; border: 1px solid #eee;">{{ $order->nama_barang }}</td>
-                        <td style="padding: 12px; text-align: center; border: 1px solid #eee;">{{ $order->jumlah }} {{ $order->satuan }}</td>
+                        <td style="padding: 12px; border: 1px solid #eee; font-weight: 600;">{{ $bpp->no_bukti }}</td>
+                        <td style="padding: 12px; text-align: center; border: 1px solid #eee;">{{ $bpp->item_count }}</td>
                         <td style="padding: 12px; text-align: center; border: 1px solid #eee;">
-                            @if($order->status === 'pending')
+                            @if($bpp->agg_status === 'pending')
                                 <span style="padding: 4px 12px; background: #FFF3CD; color: #856404; border-radius: 12px; font-size: 12px; font-weight: 600;">Pending</span>
-                            @elseif($order->status === 'approved')
+                            @elseif($bpp->agg_status === 'approved')
                                 <span style="padding: 4px 12px; background: #D4EDDA; color: #155724; border-radius: 12px; font-size: 12px; font-weight: 600;">Approved</span>
-                            @elseif($order->status === 'final_approved')
+                            @elseif($bpp->agg_status === 'final_approved')
                                 <span style="padding: 4px 12px; background: #D1ECF1; color: #0c5460; border-radius: 12px; font-size: 12px; font-weight: 600;">Final Approved</span>
-                            @elseif($order->status === 'rejected')
+                            @elseif($bpp->agg_status === 'rejected')
                                 <span style="padding: 4px 12px; background: #F8D7DA; color: #721c24; border-radius: 12px; font-size: 12px; font-weight: 600;">Rejected</span>
                             @else
-                                <span style="padding: 4px 12px; background: #E2E3E5; color: #383d41; border-radius: 12px; font-size: 12px; font-weight: 600;">{{ ucfirst(str_replace('_', ' ', $order->status ?? 'unknown')) }}</span>
+                                <span style="padding: 4px 12px; background: #E2E3E5; color: #383d41; border-radius: 12px; font-size: 12px; font-weight: 600;">{{ ucfirst(str_replace('_', ' ', $bpp->agg_status ?? 'unknown')) }}</span>
                             @endif
                         </td>
+                        <td style="padding: 12px; text-align: center; border: 1px solid #eee;">{{ \Carbon\Carbon::parse($bpp->created_at)->format('d/m/Y H:i') }}</td>
                         <td style="padding: 12px; text-align: center; border: 1px solid #eee;">
-                            {{ \Carbon\Carbon::parse($order->created_at)->format('d/m/Y H:i') }}
-                        </td>
-                        <td style="padding: 12px; text-align: center; border: 1px solid #eee;">
-                            <a href="{{ route('orders.show', $order->id_order) }}" 
-                               style="padding: 6px 12px; background: var(--btn); color: white; text-decoration: none; border-radius: 4px; font-size: 13px; display: inline-block;">
-                                Detail
-                            </a>
-                            @if($order->status === 'pending')
-                            <form action="{{ route('order.cancel') }}" method="POST" style="display: inline; margin-left: 8px;">
-                                @csrf
-                                <input type="hidden" name="id_order" value="{{ $order->id_order }}">
-                                <button type="submit" 
-                                        onclick="return confirm('Apakah Anda yakin ingin membatalkan order ini?')"
-                                        style="padding: 6px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; font-size: 13px; cursor: pointer;">
-                                    Batal
-                                </button>
-                            </form>
-                            @endif
+                            <a href="{{ route('order.bpp-detail', $bpp->no_bukti) }}" style="padding: 6px 12px; background: var(--btn); color: white; text-decoration: none; border-radius: 4px; font-size: 13px; display: inline-block;">Detail</a>
                         </td>
                     </tr>
                     @endforeach
@@ -112,7 +93,7 @@
         </div>
         @else
         <div style="padding: 40px; text-align: center; color: #999; border: 1px solid #eee; border-radius: 8px;">
-            Belum ada order. <a href="{{ route('order.index') }}" style="color: var(--btn);">Buat order baru</a>
+            Belum ada surat BPP. <a href="{{ route('order.index') }}" style="color: var(--btn);">Buat order baru</a>
         </div>
         @endif
     </div>

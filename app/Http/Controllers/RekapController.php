@@ -16,12 +16,12 @@ class RekapController extends Controller
         return [
             'RANTAU' => 'rantau',
             'BINUANG' => 'binuang',
-            'TAP SELATAN' => 'tap sel',
+            'TAP SELATAN' => 'tap_sel', // TAP SELATAN masuk ke tap_sel
             'CLU' => 'clu',
             'CLS' => 'cls',
-            'TAPIN' => 'tap tengah', // TAPIN masuk ke tap tengah
-            'TENGAH' => 'tap tengah',
-            'BATU HAPU' => 'batu hapu',
+            'TAPIN' => 'tap_tengah', // TAPIN masuk ke tap_tengah
+            'TENGAH' => 'tap_tengah',
+            'BATU HAPU' => 'batu_hapu',
             'BAKARANGAN' => 'bakarangan',
             'LOKPAIKAT' => 'lokpaikat',
             'SALBA' => 'salba',
@@ -60,11 +60,11 @@ class RekapController extends Controller
         $rekap = [
             'rantau' => 0,
             'binuang' => 0,
-            'tap sel' => 0,
+            'tap_sel' => 0,
             'clu' => 0,
             'cls' => 0,
-            'tap tengah' => 0,
-            'batu hapu' => 0,
+            'tap_tengah' => 0,
+            'batu_hapu' => 0,
             'bakarangan' => 0,
             'lokpaikat' => 0,
             'salba' => 0,

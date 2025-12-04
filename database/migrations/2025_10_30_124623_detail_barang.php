@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
             Schema::create('detail_barang', function (Blueprint $table) {
-            $table->id('detail_barang')->primary();
+            // id() sudah primary otomatis
+            $table->id('detail_barang');
             $table->string('kode_barang');
             $table->date('tanggal');
             $table->string('no_bukti');

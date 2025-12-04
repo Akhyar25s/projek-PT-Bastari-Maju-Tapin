@@ -7,6 +7,7 @@ use App\Http\Controllers\DetailBarangController;
 use App\Http\Controllers\RekapController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\BarangRusakController;
+use App\Http\Controllers\BarangController;
 
 /**
  * Route Home - Redirect ke dashboard atau login
@@ -25,8 +26,8 @@ Route::get('/', function () {
  */
 // Route login - hanya bisa diakses jika belum login
 Route::middleware('guest')->group(function () {
-Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('login', [LoginController::class, 'login']);
+    Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('login', [LoginController::class, 'login'])->name('login.attempt');
 });
 
 // Logout - memerlukan login
@@ -93,6 +94,12 @@ Route::post('/barang/{kode_barang}/detail', [DetailBarangController::class, 'sto
     Route::middleware('role:Admin,admin,Penjaga Gudang,penjaga gudang,pejaga gudang')->group(function () {
     Route::resource('barang-rusak', BarangRusakController::class);
     });
+
+    // Harga barang CRUD khusus Keuangan
+    Route::middleware('role:Keuangan,keuangan')->group(function () {
+        Route::get('/barang/{kode_barang}/harga/edit', [BarangController::class, 'editHarga'])->name('barang.harga.edit');
+        Route::post('/barang/{kode_barang}/harga', [BarangController::class, 'updateHarga'])->name('barang.harga.update');
+    });
 });
 
 /**
@@ -116,6 +123,11 @@ Route::middleware('auth')->group(function () {
     // Semua role bisa melihat status order
     Route::get('/order/status', [OrderController::class, 'status'])->name('order.status');
     Route::get('/orders/{id_order}', [OrderController::class, 'show'])->name('orders.show');
+    // Detail per surat BPP - constraint untuk menerima karakter apapun termasuk slash dan spasi
+    Route::get('/order/bpp/{no_bukti}', [OrderController::class, 'bppDetail'])->where('no_bukti', '.*')->name('order.bpp-detail');
+    
+    // Semua role bisa melihat detail batch
+    Route::get('/order/batch/{batch_id}', [OrderController::class, 'batchDetail'])->name('order.batch-detail');
 
     // Hanya Perencanaan, Penjaga Gudang, dan Admin yang bisa membuat order
     Route::middleware('role:Perencanaan,perencanaan,Penjaga Gudang,penjaga gudang,pejaga gudang,Admin,admin')->group(function () {
@@ -133,15 +145,23 @@ Route::post('/order', [OrderController::class, 'store'])->name('order.store');
     // Hanya Umum yang bisa memvalidasi order dari Gudang (approve/reject)
     Route::middleware('role:Umum,umum')->group(function () {
         Route::post('/order/{id_order}/validate-umum', [OrderController::class, 'validateByUmum'])->name('order.validate-umum');
+        Route::post('/order/batch/{batch_id}/validate-umum', [OrderController::class, 'validateBatchByUmum'])->name('order.validate-batch-umum');
+        Route::post('/order/bpp/{no_bukti}/validate-umum', [OrderController::class, 'validateBppByUmum'])->where('no_bukti', '.*')->name('order.validate-bpp-umum');
     });
 
     // Hanya Gudang yang bisa memvalidasi order dari Perencanaan (approve/reject)
     Route::middleware('role:Penjaga Gudang,penjaga gudang,pejaga gudang,Admin,admin')->group(function () {
         Route::post('/order/{id_order}/validate-gudang', [OrderController::class, 'validateByGudang'])->name('order.validate-gudang');
+        Route::post('/order/batch/{batch_id}/validate-gudang', [OrderController::class, 'validateBatchByGudang'])->name('order.validate-batch-gudang');
+        Route::post('/order/bpp/{no_bukti}/validate-gudang', [OrderController::class, 'validateBppByGudang'])->where('no_bukti', '.*')->name('order.validate-bpp-gudang');
     });
 
     // Hanya Keuangan yang bisa memvalidasi final order dari Gudang
     Route::middleware('role:Keuangan,keuangan')->group(function () {
         Route::post('/order/{id_order}/validate-keuangan', [OrderController::class, 'validateByKeuangan'])->name('order.validate-keuangan');
+        Route::post('/order/batch/{batch_id}/validate-keuangan', [OrderController::class, 'validateBatchByKeuangan'])->name('order.validate-batch-keuangan');
+        Route::post('/order/bpp/{no_bukti}/validate-keuangan', [OrderController::class, 'validateBppByKeuangan'])->where('no_bukti', '.*')->name('order.validate-bpp-keuangan');
+        // Route untuk melihat detail riwayat order berdasarkan status
+        Route::get('/order/status/{status}', [OrderController::class, 'orderByStatus'])->name('order.by-status');
     });
 });

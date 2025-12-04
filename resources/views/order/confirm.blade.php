@@ -27,6 +27,11 @@
                         <th style="padding: 12px; text-align: left; font-size: 14px; font-weight: bold; border: 1px solid #ddd;">Kode</th>
                         <th style="padding: 12px; text-align: left; font-size: 14px; font-weight: bold; border: 1px solid #ddd;">Nama Barang</th>
                         <th style="padding: 12px; text-align: center; font-size: 14px; font-weight: bold; border: 1px solid #ddd;">Jumlah Orderan</th>
+                        @php $userRole = strtolower(session('role') ?? ''); @endphp
+                        @if($userRole === 'keuangan')
+                            <th style="padding: 12px; text-align: center; font-size: 14px; font-weight: bold; border: 1px solid #ddd;">Harga /unit</th>
+                            <th style="padding: 12px; text-align: center; font-size: 14px; font-weight: bold; border: 1px solid #ddd;">Subtotal</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -35,6 +40,10 @@
                         <td style="padding: 12px; color: #333; font-size: 14px; border: 1px solid #eee;">{{ $order->kode_barang }}</td>
                         <td style="padding: 12px; color: #333; font-size: 14px; border: 1px solid #eee;">{{ $order->nama_barang }}</td>
                         <td style="padding: 12px; text-align: center; color: #333; font-size: 14px; border: 1px solid #eee;">{{ $order->jumlah }} {{ $order->satuan }}</td>
+                        @if($userRole === 'keuangan')
+                            <td style="padding: 12px; text-align: center; color: #333; font-size: 14px; border: 1px solid #eee;">{{ isset($order->harga_satuan) ? number_format($order->harga_satuan,2,',','.') : '-' }}</td>
+                            <td style="padding: 12px; text-align: center; color: #333; font-size: 14px; border: 1px solid #eee; font-weight: 600;">{{ isset($order->total_harga) ? number_format($order->total_harga,2,',','.') : '-' }}</td>
+                        @endif
                     </tr>
                     @empty
                     <tr>
@@ -45,6 +54,19 @@
                     @endforelse
                 </tbody>
             </table>
+            @php
+                // Hitung grand total hanya untuk role keuangan
+                $userRole = strtolower(session('role') ?? '');
+                $grandTotal = 0;
+                if ($userRole === 'keuangan') {
+                    $grandTotal = $orders->sum(function($o){ return $o->total_harga ?? 0; });
+                }
+            @endphp
+            @if($userRole === 'keuangan')
+                <div style="text-align: right; margin-top: 20px; font-size: 15px; font-weight: 600; color: #333;">
+                    Total Keseluruhan: <span style="color: var(--blue);">Rp {{ number_format($grandTotal,2,',','.') }}</span>
+                </div>
+            @endif
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px;">

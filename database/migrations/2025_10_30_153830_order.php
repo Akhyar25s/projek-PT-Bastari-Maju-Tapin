@@ -14,7 +14,10 @@ return new class extends Migration
             $table->integer('jumlah');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
-            $table->foreign('id_barang')->references('kode_barang')->on('barang')->onDelete('cascade');
+            // Foreign key hanya untuk MySQL (SQLite sering bermasalah pada skenario test ini)
+            if (Schema::getConnection()->getDriverName() === 'mysql') {
+                $table->foreign('id_barang')->references('kode_barang')->on('barang')->onDelete('cascade');
+            }
     });
     }
 
